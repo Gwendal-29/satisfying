@@ -1,0 +1,5 @@
+# Sert le dossier site/ en HTTPS (certificat Let's Encrypt automatique).
+{$DOMAIN} {
+	root * /srv
+	file_server
+}

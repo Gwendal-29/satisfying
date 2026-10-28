@@ -1,0 +1,30 @@
+services:
+  tiktok:
+    build: .
+    container_name: tiktok-satisfying
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/data   # vidéos, historique et jeton TikTok (à conserver !)
+    # Évite qu'un rendu monopolise tout le VPS.
+    cpus: 1.5
+    mem_limit: 1g
+
+  # Optionnel : mini-site (icône, conditions, confidentialité) demandé par TikTok.
+  # Lancer avec :  docker compose --profile site up -d
+  site:
+    image: caddy:2.8
+    profiles: [site]
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?mets DOMAIN=ton-domaine.fr dans .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv:ro
+      - caddy_data:/data
+
+volumes:
+  caddy_data:

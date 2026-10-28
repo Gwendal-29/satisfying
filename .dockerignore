@@ -1,0 +1,9 @@
+output/
+data/
+history.json
+tokens.json
+config.json
+.env
+__pycache__/
+**/__pycache__/
+*.bat

@@ -1,0 +1,8 @@
+output/
+data/
+history.json
+tokens.json
+config.json
+.env
+__pycache__/
+daily.log
