@@ -1,0 +1,7 @@
+# Caddy + module DuckDNS : obtient le certificat HTTPS via DuckDNS (challenge DNS),
+# sans avoir besoin des ports 80/443.
+FROM caddy:2.10-builder AS builder
+RUN xcaddy build --with github.com/caddy-dns/duckdns
+
+FROM caddy:2.10
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy

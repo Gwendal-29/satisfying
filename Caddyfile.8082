@@ -1,0 +1,13 @@
+# Site en HTTPS sur le port 8082. Le certificat est obtenu via DuckDNS,
+# donc les ports 80/443 (déjà utilisés sur le VPS) ne sont pas touchés.
+{
+	auto_https disable_redirects
+}
+
+{$DOMAIN}:8082 {
+	tls {
+		dns duckdns {$DUCKDNS_TOKEN}
+	}
+	root * /srv
+	file_server
+}

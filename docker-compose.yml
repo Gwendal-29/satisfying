@@ -26,17 +26,23 @@ services:
       - ./site:/srv:ro
       - caddy_data:/data
 
-  # Variante : site en HTTP simple sur le port 8082, derrière un reverse proxy déjà en place
-  # (nginx, Traefik, Caddy...) qui gère le HTTPS. Lancer avec :  docker compose --profile site-8082 up -d
+  # Variante : site en HTTPS sur le port 8082 (quand 80/443 sont déjà pris sur le VPS).
+  # Certificat obtenu via DuckDNS. Lancer avec :  docker compose --profile site-8082 up -d --build site-8082
   site-8082:
-    image: caddy:2.8
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
     profiles: [site-8082]
     restart: unless-stopped
-    command: caddy file-server --root /srv --listen :8082
+    environment:
+      DOMAIN: ${DOMAIN}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
     ports:
       - "8082:8082"
     volumes:
+      - ./Caddyfile.8082:/etc/caddy/Caddyfile:ro
       - ./site:/srv:ro
+      - caddy_data:/data
 
 volumes:
   caddy_data:
