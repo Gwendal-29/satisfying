@@ -26,5 +26,17 @@ services:
       - ./site:/srv:ro
       - caddy_data:/data
 
+  # Variante : site en HTTP simple sur le port 8082, derrière un reverse proxy déjà en place
+  # (nginx, Traefik, Caddy...) qui gère le HTTPS. Lancer avec :  docker compose --profile site-8082 up -d
+  site-8082:
+    image: caddy:2.8
+    profiles: [site-8082]
+    restart: unless-stopped
+    command: caddy file-server --root /srv --listen :8082
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./site:/srv:ro
+
 volumes:
   caddy_data:
