@@ -28,8 +28,9 @@ CONFIG = os.path.join(DATA, "config.json")
 TOKENS = os.path.join(DATA, "tokens.json")
 HISTORY = os.path.join(DATA, "history.json")
 API = "https://open.tiktokapis.com/v2"
-PORT = 3455
-REDIRECT = f"http://localhost:{PORT}/callback/"
+# Doit être identique, au caractère près, à la Redirect URI « Desktop » enregistrée dans Login Kit.
+REDIRECT = os.environ.get("TIKTOK_REDIRECT_URI", "http://localhost:8082/callback")
+PORT = urllib.parse.urlparse(REDIRECT).port or 80
 MB = 1024 * 1024
 MODE = os.environ.get("TIKTOK_MODE", "draft").lower()
 PRIVACY = os.environ.get("TIKTOK_PRIVACY", "PUBLIC_TO_EVERYONE")

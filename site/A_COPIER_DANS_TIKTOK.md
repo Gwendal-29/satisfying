@@ -11,5 +11,5 @@ Remplace `TONPSEUDO` par ton nom d'utilisateur GitHub.
 | Platform | **Desktop**, URL : `https://TONPSEUDO.github.io/satisfying-loops/` |
 | Terms of Service URL | `https://TONPSEUDO.github.io/satisfying-loops/terms.html` |
 | Privacy Policy URL | `https://TONPSEUDO.github.io/satisfying-loops/privacy.html` |
-| Login Kit, Redirect URI | `http://localhost:3455/callback/` |
+| Login Kit, Redirect URI | `http://localhost:8082/callback` |
 | Scopes | `user.info.basic`, `video.upload` (+ `video.publish` plus tard) |

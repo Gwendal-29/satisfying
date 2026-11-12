@@ -20,7 +20,7 @@ vidéo, la coupure est invisible et on attend une fin qui n'arrive jamais.
 1. Va sur https://developers.tiktok.com, puis **Manage apps → Connect an app**. Plateforme : **Desktop**.
 2. Ajoute les produits **Login Kit** et **Content Posting API**.
    Pour la publication directe, active aussi **Direct Post** dans Content Posting API.
-3. Dans Login Kit, ajoute l'URI de redirection `http://localhost:3455/callback/`
+3. Dans Login Kit, ajoute l'URI de redirection `http://localhost:8082/callback`
 4. Coche les scopes `user.info.basic` et `video.upload` (et `video.publish` pour la publication directe).
 5. Passe l'app en **Sandbox** et ajoute ton compte TikTok dans *Target users*.
 6. Note le **Client key** et le **Client secret**.
