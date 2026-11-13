@@ -9,6 +9,7 @@ import time
 import traceback
 
 import daily
+import notify
 
 TIMES = sorted(datetime.time.fromisoformat(t.strip()) for t in os.environ.get("POST_TIMES", "18:00").split(","))
 COUNT = int(os.environ.get("VIDEOS_PER_RUN", "1"))
@@ -30,6 +31,7 @@ def job():
         if isinstance(e, KeyboardInterrupt):
             raise
         traceback.print_exc()
+        notify.error(traceback.format_exc())
 
 
 if __name__ == "__main__":

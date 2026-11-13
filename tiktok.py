@@ -22,6 +22,8 @@ import webbrowser
 
 import requests
 
+import notify
+
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.environ.get("DATA_DIR", ROOT)
 CONFIG = os.path.join(DATA, "config.json")
@@ -202,6 +204,8 @@ def pending(limit=None):
             entry["uploaded"] = True
             entry["uploaded_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
             _save(HISTORY, hist)
+            notify.video_ready(entry.get("type", "?"), float(entry.get("duration", 0)), entry.get("caption", ""),
+                               "publiée sur TikTok" if MODE == "direct" else "dans tes brouillons TikTok")
             sent += 1
     return sent
 

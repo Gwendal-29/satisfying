@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
 RUN python -m piper.download_voices fr_FR-siwis-medium fr_FR-tom-medium --download-dir /app/voices
 
 COPY satisfy ./satisfy
-COPY generate.py tiktok.py daily.py scheduler.py ./
+COPY generate.py tiktok.py daily.py scheduler.py notify.py ./
 
 ENV PYTHONUNBUFFERED=1 \
     DATA_DIR=/data \
