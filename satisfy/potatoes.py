@@ -6,7 +6,9 @@ visage, chapeau et extras (cape, bras, halo...). Chaque vidéo tire sa propre di
 Jeux : PotatoRace (course pour sortir des anneaux), PotatoSplit (la patate géante se divise),
 PotatoEscape (sortir des formes, solo ou duel), PotatoDuel (deux équipes qui fusionnent).
 """
+import json
 import math
+import os
 
 import cairo
 import numpy as np
@@ -724,10 +726,49 @@ def draw_character(ctx, x, y, r, spec, angle=0.0, look=(0, 0), t=0.0, seed=0.0, 
     ctx.restore()
 
 
+# ------------------------------------------------------------------ rotation des personnages
+
+_USAGE = os.path.join(os.environ.get("DATA_DIR", os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                      "characters.json")
+
+
+def _load_usage():
+    try:
+        with open(_USAGE, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def _rotate(rng, pool, k):
+    """Tire k personnages en favorisant ceux qui sont le moins sortis jusqu'ici.
+
+    Chaque personnage passe donc régulièrement ; l'ordre reste aléatoire à égalité.
+    Le compteur est enregistré dans DATA_DIR/characters.json.
+    """
+    usage = _load_usage()
+    order = sorted(range(len(pool)), key=lambda i: (usage.get(pool[i][0], 0), rng.random()))
+    chosen = [pool[i] for i in order[:k]]
+    rng.shuffle(chosen)
+    for name, _ in chosen:
+        usage[name] = usage.get(name, 0) + 1
+    try:
+        tmp = _USAGE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(usage, f, ensure_ascii=False, indent=1)
+        os.replace(tmp, _USAGE)
+    except OSError:
+        pass
+    return chosen
+
+
+def pick_boss(rng):
+    return _rotate(rng, BOSSES, 1)[0]
+
+
 def make_cast(rng, n=8):
-    """Distribution d'une vidéo : la patatine, n-2 personnages au hasard, un boss final."""
-    idx = rng.choice(len(CHARACTERS), size=n - 2, replace=False)
-    cast = [PATATINE] + [CHARACTERS[i] for i in idx] + [BOSSES[int(rng.integers(len(BOSSES)))]]
+    """Distribution d'une vidéo : la patatine, n-2 personnages (rotation), un boss final (rotation)."""
+    cast = [PATATINE] + _rotate(rng, CHARACTERS, n - 2) + [pick_boss(rng)]
     specs = [c[1] for c in cast]
 
     def draw(ctx, x, y, r, tier, angle=0.0, look=(0, 0), t=0.0, seed=0.0, blink=False):
@@ -747,8 +788,7 @@ def short(name):
 
 
 def pick(rng, k):
-    idx = rng.choice(len(CHARACTERS), size=k, replace=False)
-    return [CHARACTERS[i] for i in idx]
+    return _rotate(rng, CHARACTERS, k)
 
 
 # ------------------------------------------------------------------ 1. course de patates
@@ -761,14 +801,14 @@ class PotatoRace(Scene):
     tags = ["#patate", "#course", "#satisfying", "#asmr", "#pourtoi"]
     outro = 3.0
     lengths = ALL
-    G, PR = 1200.0, 22.0
+    G, PR = 1200.0, 28.0
 
     def __init__(self, rng):
         super().__init__(rng)
         self.T = self.target(float(rng.choice([35, 45, 52]))) - 2
         self.max_duration = self.T + 14
         self.n = int(np.clip(round(self.T / 4.5), 5, 12))
-        self.radii = np.linspace(105, 485, self.n)
+        self.radii = np.linspace(125, 495, self.n)
         spin = rng.uniform(0.5, 0.9)
         self.w = [(spin + 0.06 * i) * (-1 if i % 2 else 1) for i in range(self.n)]
         self.rot = list(rng.uniform(0, TAU, self.n))
@@ -931,9 +971,31 @@ class PotatoSplit(SplitBalls):
         self.cap = int(rng.choice([32, 64] if self.target < 28 else [64, 100, 128]))
         self.r0 = 110.0
         self.rmin = math.sqrt(0.4 * self.R ** 2 / self.cap)
-        boss = BOSSES[int(rng.integers(len(BOSSES)))]
+        boss = pick_boss(rng)
         self.cast = [("LA PATATE GÉANTE", boss[1])] + pick(rng, 12)
         self.title = f"1 patate géante → {self.cap} ?"
+        self.announced = -1
+        self.last_voice = -10.0
+        self.banner = None
+
+    def _announce(self, gen, t):
+        """Nouvelle génération : bannière + voix, de plus en plus aiguë (les patates rapetissent)."""
+        name = self.cast[min(gen, len(self.cast) - 1)][0]
+        self.banner = ("NOUVEAU : " + name if gen else name, t)
+        start = max(t, self.last_voice + 0.15)
+        sig = speak(name.lower(), deep=min(2.0 * gen, 12.0), rng=self.rng)
+        self.audio.add(start, sig, gain=0.8)
+        self.last_voice = start + len(sig) / 44100
+
+    def draw(self, ctx, t, frame):
+        super().draw(ctx, t, frame)
+        g = int(self.gen.max())
+        if g > self.announced and g < len(self.cast):
+            self.announced = g
+            self._announce(g, t)
+        if self.banner and t - self.banner[1] < 2.2:
+            a = min(1.0, (2.2 - (t - self.banner[1])) * 2)
+            text(ctx, self.banner[0], W / 2, 400, 48, (1, 0.85, 0.2), a)
 
     def _draw_balls(self, ctx, r, t):
         order = np.argsort(-r, kind="stable")
@@ -951,7 +1013,8 @@ class PotatoSplit(SplitBalls):
 class PotatoEscape(ShapeEscape):
     caption = "La patate va-t-elle s'échapper ?"
     tags = ["#patate", "#satisfying", "#oddlysatisfying", "#asmr", "#pourtoi"]
-    BR = 18.0
+    BR = 17.0
+    R0 = 130.0
 
     def __init__(self, rng):
         super().__init__(rng)

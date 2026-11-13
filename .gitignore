@@ -11,3 +11,4 @@ voices/
 settings.json
 scheduler_state.json
 daily.lock
+characters.json

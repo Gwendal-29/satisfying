@@ -352,6 +352,7 @@ class ShapeEscape(Scene):
     outro = 2.5
     lengths = ALL
     BR, G = 11.0, 1300.0
+    R0 = 85.0  # taille de la première forme
 
     def __init__(self, rng):
         super().__init__(rng)
@@ -364,8 +365,8 @@ class ShapeEscape(Scene):
                 "hasard": lambda i: int(rng.choice([5, 6, 8, 8]))}[mode]
         # Chaque forme doit contenir entièrement la précédente (sinon la balle les traverse
         # toutes d'un coup) : rayon suivant = (rayon + marge) / cos(pi / côtés).
-        gapr = 16.0 if self.T > 40 else 20.0
-        self.sides, radii, R = [], [], 85.0
+        gapr = max(16.0 if self.T > 40 else 20.0, self.BR * 1.7)
+        self.sides, radii, R = [], [], self.R0
         i = 0
         while True:
             n = pick(i) if i else (4 if mode == "suite" else pick(0))
