@@ -11,6 +11,14 @@ synthétisés donc sans droits d'auteur) et l'envoie sur TikTok à l'heure chois
 | `InfiniteSpiral` | **Boucle infinie** : spirale hypnotique (illusion « fixe le centre puis regarde ta main ») |
 | `GrowingBall` | La balle grandit à chaque rebond jusqu'à remplir le cercle |
 | `Multiply` | Les balles se multiplient jusqu'à 1000 |
+| `EscapeBox` | Une boîte tourne et s'ouvre, chaque bille qui sort en fait naître d'autres : « 2000 billes en 30 s ? » |
+| `RingCountdown` | Une balle brise un à un des dizaines d'anneaux arc-en-ciel, compte à rebours au centre |
+| `Katana` | Un sabre tourne, chaque coupe divise une balle en deux : « combien de morceaux ? » |
+| `ClockSweep` | Deux aiguilles d'horloge brassent des billes qui se multiplient : « tu dis combien ? » |
+| `GearArcs` | Un engrenage et deux arcs en C dédoublent la balle à chaque coup : « 1 balle → 250 ? » |
+| `PinArt` | **Boucle infinie** : une plaque 3D en pixels change de forme sans fin |
+| `PotatoMerge` | Des patates fusionnent en patates plus grosses, une voix de plus en plus grave annonce chaque nouvelle |
+| `MarbleMelody` | Une bille rebondit de tube en tube et joue des mélodies connues (libres de droits) : « Top 6 des mélodies » |
 | `Polyrhythm`, `PendulumWave`, `Galton`, `Sorting` | Polyrythmie, pendules, planche de Galton, son d'un tri |
 
 Les boucles infinies ont une dernière image identique à la première : quand TikTok relance la

@@ -783,7 +783,13 @@ class Multiply(Scene):
             text(ctx, "MAX !", W / 2, 1650, 72, (0.4, 1, 0.5))
 
 
+from .escape_box import EscapeBox  # noqa: E402
+from .inspired import ClockSweep, GearArcs, Katana, PinArt, RingCountdown  # noqa: E402
+from .merge import PotatoMerge  # noqa: E402
+from .marble import MarbleMelody  # noqa: E402
+from .psy import PsyTrance  # noqa: E402
 from .illusions import InfiniteCube, InfiniteSpiral  # noqa: E402
 
 SCENES = [GrowingBall, EscapeRings, Polyrhythm, Sorting, PendulumWave, Galton, Multiply,
-          InfiniteCube, InfiniteSpiral]
+          InfiniteCube, InfiniteSpiral, EscapeBox, RingCountdown, Katana, ClockSweep,
+          GearArcs, PinArt, PotatoMerge, MarbleMelody, PsyTrance]
