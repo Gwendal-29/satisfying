@@ -39,10 +39,17 @@ def pick_scene(name=None):
                 return cls
         raise SystemExit(f"Type inconnu : {name}. Types : {', '.join(c.__name__ for c in SCENES)}")
     allowed = [c for c in SCENES if not POOL or c.__name__.lower() in POOL] or SCENES
-    # Évite de reposter le même type que les dernières vidéos.
-    skip = min(3, len(allowed) // 2)
-    recent = [h["type"] for h in _history()[-skip:]] if skip else []
-    pool = [c for c in allowed if c.__name__ not in recent] or allowed
+    # Rotation équilibrée : on tire parmi les types les moins utilisés jusqu'ici, donc chaque
+    # type passe une fois avant qu'un autre revienne (ordre aléatoire à chaque tour).
+    hist = _history()
+    counts = {c.__name__: 0 for c in allowed}
+    for h in hist:
+        if h.get("type") in counts:
+            counts[h["type"]] += 1
+    low = min(counts.values())
+    pool = [c for c in allowed if counts[c.__name__] == low]
+    last = hist[-1].get("type") if hist else None
+    pool = [c for c in pool if c.__name__ != last] or pool
     return random.choice(pool)
 
 
