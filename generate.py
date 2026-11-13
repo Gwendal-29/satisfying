@@ -53,8 +53,9 @@ def pick_length(hist=None):
 
 
 def allowed_scenes():
-    """Types autorisés : ceux cochés dans le centre de contrôle, sinon SCENES du .env, sinon tous."""
-    chosen = {t.lower() for t in settings.load()["types"]} or set(POOL)
+    """Types autorisés : ceux cochés dans le centre de contrôle (rien de coché = tous).
+    Avant le premier enregistrement sur le site, settings.load() reprend SCENES du .env."""
+    chosen = {t.lower() for t in settings.load()["types"]}
     return [c for c in SCENES if not chosen or c.__name__.lower() in chosen] or SCENES
 
 
