@@ -263,7 +263,7 @@ class PotatoMerge(Scene):
         self.top = len(self.names) - 1
         # Rythme : la dernière fusion arrive vers la durée voulue (≈ 47 s sans consigne).
         tgt = self.target(None)
-        self.k = float(np.clip(44.0 / (tgt - 1), 0.6, 1.8)) if tgt else 1.0
+        self.k = float(np.clip(27.0 / (tgt - 2), 0.35, 1.8)) if tgt else 0.6
         if tgt:
             self.max_duration = tgt + 30
         self.p = np.zeros((0, 2))
@@ -303,8 +303,8 @@ class PotatoMerge(Scene):
         area = float((math.pi * _radius(self.tier) ** 2).sum()) if len(self.tier) else 0.0
         if area > 0.5 * math.pi * R_FLASK ** 2:
             return
-        top = min(3, int(t * self.k / 12))  # plus tard, des patates déjà un peu grosses tombent aussi
-        tier = int(self.rng.integers(0, top + 1)) if self.rng.random() < 0.35 else 0
+        # presque toujours des petites : plus de fusions à faire, donc plus d'action à l'écran
+        tier = 1 if (t * self.k > 20 and self.rng.random() < 0.15) else 0
         self.p = np.vstack([self.p, [[self.rng.uniform(-NECK * 0.4, NECK * 0.4), NECK_TOP - CY + 30]]])
         self.v = np.vstack([self.v, [[self.rng.normal(0, 40), 420.0]]])
         self.tier = np.append(self.tier, tier)
@@ -314,7 +314,7 @@ class PotatoMerge(Scene):
         self.grow = np.append(self.grow, 1.0)
         if tier not in self.found:
             self.found.add(tier)
-        self.next_spawn = t + float(self.rng.uniform(0.28, 0.45)) / self.k
+        self.next_spawn = t + float(self.rng.uniform(0.14, 0.24)) / self.k
 
     def _walls(self, r):
         p, v = self.p, self.v
@@ -386,7 +386,7 @@ class PotatoMerge(Scene):
 
     def _attract(self, t, dt):
         """Les patates identiques s'attirent doucement (et de plus en plus) pour que ça fusionne."""
-        strength = (160 + 12 * t * self.k) * self.k
+        strength = (420 + 15 * t * self.k) * self.k
         for tier in np.unique(self.tier):
             idx = np.flatnonzero(self.tier == tier)
             if len(idx) < 2:
