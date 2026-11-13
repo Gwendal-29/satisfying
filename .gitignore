@@ -8,3 +8,6 @@ __pycache__/
 daily.log
 inspirations/
 voices/
+settings.json
+scheduler_state.json
+daily.lock

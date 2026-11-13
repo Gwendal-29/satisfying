@@ -67,6 +67,13 @@ def run(count=1, kind=None, length=None):
         else:
             print("TikTok pas encore connecté (python tiktok.py auth) : vidéos gardées dans output/")
         cleanup()
+    return sorted(files)
+
+
+def send(path):
+    """Envoie une vidéo déjà générée (bouton « Envoyer » du centre de contrôle)."""
+    with run_lock():
+        return tiktok.pending(only={path})
 
 
 if __name__ == "__main__":

@@ -10,6 +10,21 @@ services:
     cpus: 1.5
     mem_limit: 1g
 
+  # Centre de contrôle web (planning, types, envoi immédiat). Même image, même dossier data.
+  # PANEL_BIND = adresse Tailscale du VPS (tailscale ip -4) : le site n'est visible que via Tailscale.
+  panel:
+    build: .
+    container_name: tiktok-panel
+    restart: unless-stopped
+    env_file: .env
+    command: ["python", "panel.py"]
+    ports:
+      - "${PANEL_BIND:-127.0.0.1}:${PANEL_PORT:-8090}:8090"
+    volumes:
+      - ./data:/data
+    cpus: 1.5
+    mem_limit: 1g
+
   # Optionnel : mini-site (icône, conditions, confidentialité) demandé par TikTok.
   # Lancer avec :  docker compose --profile site up -d
   site:

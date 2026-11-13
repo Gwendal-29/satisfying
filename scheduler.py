@@ -1,32 +1,51 @@
-"""Processus principal du conteneur : lance daily.run() aux heures de POST_TIMES, chaque jour.
+"""Processus principal du conteneur : génère et envoie les vidéos aux heures choisies.
 
-Variables : POST_TIMES="18:00" (plusieurs possibles : "12:30,19:00"), TZ="Europe/Paris",
-VIDEOS_PER_RUN=1, RUN_ON_START=0 (1 = publie aussi une vidéo au démarrage, pratique pour tester).
+Les horaires, le nombre de vidéos, les types et la pause se règlent dans le centre de contrôle
+(panel.py) et sont relus toutes les 30 secondes : aucun redémarrage nécessaire.
+Au premier lancement, les valeurs viennent du .env (POST_TIMES, VIDEOS_PER_RUN, SCENES).
+RUN_ON_START=1 : publie aussi une vidéo au démarrage (pratique pour tester).
 """
 import datetime
+import json
 import os
 import time
 import traceback
 
 import daily
 import notify
+import settings
 
-TIMES = sorted(datetime.time.fromisoformat(t.strip()) for t in os.environ.get("POST_TIMES", "18:00").split(","))
-COUNT = int(os.environ.get("VIDEOS_PER_RUN", "1"))
-
-
-def next_run(now):
-    for day in range(2):
-        for t in TIMES:
-            when = datetime.datetime.combine(now.date() + datetime.timedelta(days=day), t)
-            if when > now:
-                return when
+STATE = os.path.join(settings.DATA, "scheduler_state.json")
+CATCH_UP = datetime.timedelta(hours=2)  # créneau raté (VPS éteint...) : rattrapé s'il date de moins de 2 h
 
 
-def job():
-    print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M}] génération + envoi de {COUNT} vidéo(s)", flush=True)
+def _load_state():
     try:
-        daily.run(COUNT)
+        with open(STATE, encoding="utf-8") as f:
+            return datetime.datetime.fromisoformat(json.load(f)["last"])
+    except (OSError, ValueError, KeyError):
+        return None
+
+
+def _save_state(last):
+    with open(STATE, "w", encoding="utf-8") as f:
+        json.dump({"last": last.isoformat(timespec="seconds")}, f)
+
+
+def due_slot(now, s, last):
+    """Le créneau d'aujourd'hui (ou d'hier soir) qui doit être lancé maintenant, s'il y en a un."""
+    slots = []
+    for day in (now.date() - datetime.timedelta(days=1), now.date()):
+        for t in s["times"]:
+            slots.append(datetime.datetime.combine(day, datetime.time.fromisoformat(t)))
+    due = [x for x in slots if x <= now and (last is None or x > last) and now - x < CATCH_UP]
+    return max(due) if due else None
+
+
+def job(count):
+    print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M}] génération + envoi de {count} vidéo(s)", flush=True)
+    try:
+        daily.run(count)
     except BaseException as e:  # SystemExit des erreurs TikTok compris : le planificateur continue
         if isinstance(e, KeyboardInterrupt):
             raise
@@ -35,11 +54,33 @@ def job():
 
 
 if __name__ == "__main__":
+    os.makedirs(settings.DATA, exist_ok=True)
+    last = _load_state()
+    if last is None:  # premier lancement : on ne rattrape pas les créneaux déjà passés aujourd'hui
+        last = datetime.datetime.now()
+        _save_state(last)
     if os.environ.get("RUN_ON_START") == "1":
-        job()
+        job(settings.load()["per_run"])
+    shown = None
     while True:
-        when = next_run(datetime.datetime.now())
-        print(f"Prochaine vidéo : {when:%Y-%m-%d %H:%M}", flush=True)
-        while datetime.datetime.now() < when:
-            time.sleep(min(60, max(1, (when - datetime.datetime.now()).total_seconds())))
-        job()
+        s = settings.load()
+        now = datetime.datetime.now()
+        # le centre de contrôle avance ce repère quand il change les horaires : un horaire
+        # ajouté dans le passé ne déclenche donc pas de vidéo surprise
+        saved = _load_state()
+        if saved and saved > last:
+            last = saved
+        slot = due_slot(now, s, last)
+        if slot is not None:
+            last = slot
+            _save_state(last)
+            if s["paused"]:
+                print(f"[{now:%Y-%m-%d %H:%M}] créneau {slot:%H:%M} ignoré : publication en pause", flush=True)
+            else:
+                job(s["per_run"])
+        nxt = settings.next_run(datetime.datetime.now(), s)
+        msg = f"Prochaine vidéo : {nxt:%Y-%m-%d %H:%M}" if nxt else "Publication en pause (ou aucun horaire)"
+        if msg != shown:
+            print(msg, flush=True)
+            shown = msg
+        time.sleep(30)

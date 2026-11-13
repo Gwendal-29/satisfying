@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Centre de contrôle</title>
+<style>
+  :root {
+    --bg: #0d0f14; --card: #161a22; --card2: #1d222c; --line: #2a303c;
+    --text: #eef1f6; --muted: #8b93a3; --accent: #ff3d6e; --accent2: #25f4ee;
+    --ok: #3ddc84; --warn: #ffb020; --bad: #ff5a5a; --radius: 16px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+         padding: env(safe-area-inset-top) 0 calc(90px + env(safe-area-inset-bottom)); }
+  main { max-width: 640px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 22px; margin: 6px 0 12px; display: flex; align-items: center; gap: 10px; }
+  h1 .logo { width: 34px; height: 34px; border-radius: 10px;
+             background: linear-gradient(135deg, var(--accent2), var(--accent)); display: grid; place-items: center; font-size: 18px; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .status { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .pill { padding: 6px 12px; border-radius: 999px; background: var(--card2); border: 1px solid var(--line); font-size: 14px; }
+  .pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); } .pill.bad { color: var(--bad); }
+  label.field { display: block; font-size: 14px; color: var(--muted); margin: 10px 0 6px; }
+  select, input[type=time], input[type=number] {
+    width: 100%; background: var(--card2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px; font-size: 16px; }
+  button { font: inherit; border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer;
+           background: var(--card2); color: var(--text); border: 1px solid var(--line); }
+  button.primary { width: 100%; margin-top: 14px; padding: 16px; font-weight: 700; font-size: 17px; border: 0;
+                   background: linear-gradient(135deg, var(--accent), #ff7a45); color: #fff; }
+  button:disabled { opacity: .5; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row > * { flex: 1; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px;
+          background: var(--card2); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .chip button { padding: 0 4px; background: none; border: 0; color: var(--muted); font-size: 18px; }
+  .stepper { display: flex; align-items: center; gap: 12px; }
+  .stepper button { width: 44px; height: 44px; padding: 0; font-size: 22px; }
+  .stepper output { font-size: 22px; font-weight: 700; min-width: 28px; text-align: center; }
+  .toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; }
+  .switch { position: relative; width: 52px; height: 30px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: var(--line); border-radius: 999px; transition: .2s; }
+  .switch span::before { content: ""; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px;
+                         background: #fff; border-radius: 50%; transition: .2s; }
+  .switch input:checked + span { background: var(--accent); }
+  .switch input:checked + span::before { transform: translateX(22px); }
+  .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .quick button { padding: 8px 12px; font-size: 14px; }
+  .group { margin-top: 12px; }
+  .group-title { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .type { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px;
+          background: var(--card2); margin-bottom: 6px; border: 1px solid transparent; }
+  .type.on { border-color: var(--accent); }
+  .type input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+  .type small { color: var(--muted); display: block; font-size: 12px; }
+  .weights .w { display: grid; grid-template-columns: 70px 1fr 48px; gap: 10px; align-items: center; margin: 8px 0; }
+  .weights input[type=range] { width: 100%; accent-color: var(--accent2); }
+  .weights output { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .job { margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--card2); }
+  .job .title { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .spin { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent2);
+          animation: spin 0.9s linear infinite; flex: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .log { font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--muted); margin-top: 8px;
+         white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow: auto; }
+  .caption { background: #0b0d12; border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+             white-space: pre-wrap; word-break: break-word; font-size: 15px; margin-top: 10px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .actions button { flex: 1; min-width: 120px; }
+  button.copy { background: var(--accent2); color: #001; border: 0; font-weight: 700; }
+  video { width: 100%; max-height: 70vh; border-radius: 12px; margin-top: 10px; background: #000; }
+  .item { border-top: 1px solid var(--line); padding: 14px 0; }
+  .item:first-of-type { border-top: 0; padding-top: 0; }
+  .item .head { display: flex; justify-content: space-between; gap: 10px; }
+  .item .meta { font-size: 13px; color: var(--muted); }
+  .badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; white-space: nowrap; height: fit-content; }
+  .badge.sent { background: rgba(61, 220, 132, .15); color: var(--ok); }
+  .badge.wait { background: rgba(255, 176, 32, .15); color: var(--warn); }
+  .badge.gone { background: var(--card2); color: var(--muted); }
+  .savebar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+             background: rgba(13, 15, 20, .92); backdrop-filter: blur(10px); border-top: 1px solid var(--line);
+             transform: translateY(110%); transition: transform .25s; z-index: 10; }
+  .savebar.show { transform: none; }
+  .savebar .inner { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; }
+  .savebar button { flex: 1; padding: 14px; font-weight: 700; }
+  .savebar .save { background: var(--ok); color: #031; border: 0; }
+  .toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translate(-50%, -150%);
+           background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 600;
+           transition: transform .25s; z-index: 20; }
+  .toast.show { transform: translate(-50%, 0); }
+  .empty { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1><span class="logo">▶</span> Centre de contrôle</h1>
+  <div class="status" id="status"></div>
+
+  <!-- Envoi immédiat -->
+  <section class="card">
+    <h2>Envoyer une vidéo maintenant</h2>
+    <label class="field" for="runType">Type de vidéo</label>
+    <select id="runType"></select>
+    <label class="field" for="runLength">Durée</label>
+    <select id="runLength">
+      <option value="">Automatique (règle de la semaine)</option>
+      <option value="court">Courte · 18 à 28 s</option>
+      <option value="moyen">Moyenne · 30 à 42 s</option>
+      <option value="normal">Normale · 45 à 58 s</option>
+      <option value="long">Longue · plus d'1 minute</option>
+    </select>
+    <button class="primary" id="runBtn">🚀 Générer et envoyer sur TikTok</button>
+    <div id="job"></div>
+  </section>
+
+  <!-- Planning -->
+  <section class="card">
+    <h2>Planning</h2>
+    <div class="toggle">
+      <div><strong>Publication automatique</strong><div class="hint" style="margin:0">Désactive pour mettre en pause</div></div>
+      <label class="switch"><input type="checkbox" id="active"><span></span></label>
+    </div>
+    <label class="field">Heures de publication (chaque jour)</label>
+    <div class="chips" id="times"></div>
+    <div class="row" style="margin-top:10px">
+      <input type="time" id="newTime" value="12:00">
+      <button id="addTime" style="flex:none">+ Ajouter</button>
+    </div>
+    <label class="field">Vidéos à chaque heure</label>
+    <div class="stepper">
+      <button id="perMinus">−</button><output id="perRun">1</output><button id="perPlus">+</button>
+      <span class="hint" id="perDay" style="margin:0"></span>
+    </div>
+  </section>
+
+  <!-- Types -->
+  <section class="card">
+    <h2>Types de vidéos</h2>
+    <div class="quick">
+      <button data-quick="Fusions">🥔 Que les fusions</button>
+      <button data-quick="potato">Que les patates</button>
+      <button data-quick="all">Tout</button>
+    </div>
+    <div id="types"></div>
+    <div class="hint">Les types cochés passent chacun leur tour, dans un ordre aléatoire. Si rien n'est coché, tous les types sont utilisés.</div>
+  </section>
+
+  <!-- Durées -->
+  <section class="card weights">
+    <h2>Durées</h2>
+    <div id="weights"></div>
+    <div class="toggle" style="margin-top:8px">
+      <div><strong>1 vidéo de plus d'1 min par semaine</strong><div class="hint" style="margin:0">Imposée si aucune dans les 6 derniers jours</div></div>
+      <label class="switch"><input type="checkbox" id="weeklyLong"><span></span></label>
+    </div>
+  </section>
+
+  <!-- Historique -->
+  <section class="card">
+    <h2>Dernières vidéos</h2>
+    <div id="history"></div>
+  </section>
+</main>
+
+<div class="savebar" id="savebar"><div class="inner">
+  <button id="cancel">Annuler</button><button class="save" id="save">Enregistrer</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const LEN = { court: "Courte", moyen: "Moyenne", normal: "Normale", long: "Longue" };
+let S = null;          // dernier état reçu du serveur
+let draft = null;      // réglages en cours de modification
+let dirty = false;
+let openVideos = new Set();
+
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+// Copie qui marche aussi en http (via Tailscale, sans https)
+async function copy(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return toast("Légende copiée ✓"); }
+  } catch (e) {}
+  const ta = el("textarea", { readonly: true, style: "position:fixed;top:0;left:0;opacity:0" });
+  ta.value = text; document.body.append(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+  ta.remove();
+  toast(ok ? "Légende copiée ✓" : "Appui long sur le texte pour copier");
+}
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  return r.json();
+}
+
+function setDirty(v) { dirty = v; $("savebar").classList.toggle("show", v); }
+function edit(fn) { fn(draft); setDirty(true); renderSettings(); }
+
+// ---------------------------------------------------------------- rendu
+function renderStatus() {
+  const st = $("status"); st.replaceChildren();
+  const s = S.settings;
+  if (s.paused) st.append(el("span", { class: "pill warn" }, "⏸ En pause"));
+  else if (S.next_run) {
+    const [d, h] = S.next_run.split(" "); const [, mo, da] = d.split("-");
+    st.append(el("span", { class: "pill ok" }, `● Prochaine vidéo le ${da}/${mo} à ${h}`));
+  }
+  else st.append(el("span", { class: "pill warn" }, "Aucun horaire"));
+  st.append(el("span", { class: "pill " + (S.tiktok ? "ok" : "bad") }, S.tiktok ? "TikTok connecté" : "TikTok non connecté"));
+  st.append(el("span", { class: "pill" }, S.mode === "direct" ? "Publication directe" : "Mode brouillon"));
+  st.append(el("span", { class: "pill " + (S.discord ? "ok" : "") }, S.discord ? "Discord ✓" : "Discord non configuré"));
+}
+
+function renderRunTypes() {
+  const sel = $("runType"); const cur = sel.value;
+  sel.replaceChildren(el("option", { value: "" }, "🎲 Au hasard (parmi les types cochés)"));
+  for (const g of S.groups) {
+    const og = el("optgroup", { label: g });
+    for (const sc of S.scenes.filter((x) => x.group === g)) og.append(el("option", { value: sc.name }, sc.label));
+    if (og.children.length) sel.append(og);
+  }
+  sel.value = cur;
+}
+
+function renderSettings() {
+  const d = draft;
+  $("active").checked = !d.paused;
+  const times = $("times"); times.replaceChildren();
+  if (!d.times.length) times.append(el("span", { class: "empty" }, "Aucune heure : rien ne sera publié automatiquement"));
+  for (const t of d.times) times.append(el("span", { class: "chip" }, "🕒 " + t,
+    el("button", { "aria-label": "Retirer " + t, onclick: () => edit((x) => x.times = x.times.filter((y) => y !== t)) }, "×")));
+  $("perRun").textContent = d.per_run;
+  $("perDay").textContent = `= ${d.per_run * d.times.length} vidéo${d.per_run * d.times.length > 1 ? "s" : ""} par jour`;
+
+  const chosen = new Set(d.types);
+  const box = $("types"); box.replaceChildren();
+  for (const g of S.groups) {
+    const list = S.scenes.filter((x) => x.group === g);
+    if (!list.length) continue;
+    const grp = el("div", { class: "group" }, el("div", { class: "group-title" }, g));
+    for (const sc of list) {
+      const on = chosen.has(sc.name);
+      const cb = el("input", { type: "checkbox", checked: on, onchange: (e) => edit((x) => {
+        const set = new Set(x.types); e.target.checked ? set.add(sc.name) : set.delete(sc.name); x.types = [...set];
+      }) });
+      grp.append(el("label", { class: "type" + (on ? " on" : "") }, cb,
+        el("div", {}, sc.label, el("small", {}, sc.lengths.map((l) => LEN[l]).join(" · ")))));
+    }
+    box.append(grp);
+  }
+
+  const w = $("weights"); w.replaceChildren();
+  const total = Object.values(d.weights).reduce((a, b) => a + b, 0) || 1;
+  for (const k of ["court", "moyen", "normal", "long"]) {
+    const out = el("output", {}, Math.round(100 * d.weights[k] / total) + " %");
+    const r = el("input", { type: "range", min: 0, max: 100, value: d.weights[k],
+      oninput: (e) => { d.weights[k] = +e.target.value; setDirty(true); renderSettings(); } });
+    w.append(el("div", { class: "w" }, el("span", {}, LEN[k]), r, out));
+  }
+  $("weeklyLong").checked = d.weekly_long;
+}
+
+function renderJob() {
+  const j = S.job; const box = $("job"); box.replaceChildren();
+  $("runBtn").disabled = !!j.running;
+  if (!j.label) return;
+  const min = Math.floor((j.elapsed || 0) / 60), sec = (j.elapsed || 0) % 60;
+  const time = `${min}:${String(sec).padStart(2, "0")}`;
+  const title = j.running
+    ? el("div", { class: "title" }, el("span", { class: "spin" }), `${j.label} · ${time}`)
+    : el("div", { class: "title" }, j.ok ? "✅ Terminé" : "❌ Échec", " · " + j.label + " · " + time);
+  box.append(el("div", { class: "job" }, title,
+    j.running ? el("div", { class: "hint" }, "Rendu puis envoi : en général 2 à 6 minutes. Tu peux fermer la page.") : null,
+    !j.ok && !j.running && j.error ? el("div", { class: "log", style: "color:var(--bad)" }, j.error) : null,
+    el("div", { class: "log" }, (j.log || []).join("\n"))));
+  if (!j.running && j.ok) {
+    for (const f of j.files || []) {
+      const e = S.history.find((h) => h.file === f);
+      if (e) box.append(entryCard(e, true));
+    }
+  }
+}
+
+function entryCard(e, open) {
+  const badge = !e.exists && !e.uploaded ? el("span", { class: "badge gone" }, "supprimée")
+    : e.uploaded ? el("span", { class: "badge sent" }, "✓ envoyée") : el("span", { class: "badge wait" }, "pas envoyée");
+  const date = e.created ? `${e.created.slice(6, 8)}/${e.created.slice(4, 6)} ${e.created.slice(9, 11)}h${e.created.slice(11, 13)}` : "";
+  const item = el("div", { class: "item" },
+    el("div", { class: "head" },
+      el("div", {}, el("strong", {}, e.label), el("div", { class: "meta" }, `${date} · ${Math.round(e.duration || 0)} s` + (e.length ? ` · ${LEN[e.length] || e.length}` : ""))),
+      badge),
+    el("div", { class: "caption" }, e.caption));
+  const actions = el("div", { class: "actions" },
+    el("button", { class: "copy", onclick: () => copy(e.caption) }, "📋 Copier la légende"));
+  if (e.url) {
+    const vbox = el("div");
+    const show = () => { vbox.replaceChildren(el("video", { src: e.url, controls: true, playsinline: true, preload: "metadata" })); };
+    actions.append(el("button", { onclick: () => {
+      if (openVideos.has(e.file)) { openVideos.delete(e.file); vbox.replaceChildren(); }
+      else { openVideos.add(e.file); show(); }
+    } }, "▶ Voir"));
+    if (open || openVideos.has(e.file)) { openVideos.add(e.file); show(); }
+    if (!e.uploaded) actions.append(el("button", { onclick: async () => {
+      const r = await api("/api/send", { file: e.file });
+      toast(r.ok ? "Envoi lancé" : r.error); refresh();
+    } }, "⬆ Envoyer"));
+    item.append(actions, vbox);
+  } else item.append(actions);
+  return item;
+}
+
+function renderHistory() {
+  const box = $("history"); box.replaceChildren();
+  if (!S.history.length) return box.append(el("div", { class: "empty" }, "Aucune vidéo pour l'instant."));
+  for (const e of S.history.slice(0, 20)) box.append(entryCard(e, false));
+}
+
+// ---------------------------------------------------------------- données
+async function refresh() {
+  const firstLoad = !S;
+  const wasRunning = S && S.job.running;
+  S = await api("/api/state");
+  if (!dirty) draft = JSON.parse(JSON.stringify(S.settings));
+  renderStatus();
+  if (firstLoad) renderRunTypes();
+  renderSettings();
+  renderJob();
+  // on ne redessine l'historique que si nécessaire (sinon les vidéos ouvertes se relancent)
+  const sig = S.history.map((h) => h.file + h.uploaded + h.exists).join("|");
+  if (sig !== refresh._sig) { refresh._sig = sig; renderHistory(); }
+  if (wasRunning && !S.job.running) toast(S.job.ok ? "Vidéo envoyée ✓" : "Échec, regarde le détail");
+  clearTimeout(refresh._t);
+  refresh._t = setTimeout(refresh, S.job.running ? 2500 : 15000);
+}
+
+$("runBtn").onclick = async () => {
+  const r = await api("/api/run", { type: $("runType").value, length: $("runLength").value });
+  toast(r.ok ? "C'est parti 🚀" : r.error); refresh();
+};
+$("active").onchange = (e) => edit((x) => x.paused = !e.target.checked);
+$("weeklyLong").onchange = (e) => edit((x) => x.weekly_long = e.target.checked);
+$("addTime").onclick = () => {
+  const t = $("newTime").value; if (!t) return;
+  edit((x) => { if (!x.times.includes(t)) x.times = [...x.times, t].sort(); });
+};
+$("perMinus").onclick = () => edit((x) => x.per_run = Math.max(1, x.per_run - 1));
+$("perPlus").onclick = () => edit((x) => x.per_run = Math.min(5, x.per_run + 1));
+document.querySelectorAll("[data-quick]").forEach((b) => b.onclick = () => edit((x) => {
+  const q = b.dataset.quick;
+  if (q === "all") x.types = S.scenes.map((s) => s.name);
+  else if (q === "none") x.types = [];
+  else if (q === "potato") x.types = ["PotatoMerge"];
+  else x.types = S.scenes.filter((s) => s.group === q).map((s) => s.name);
+}));
+$("cancel").onclick = () => { draft = JSON.parse(JSON.stringify(S.settings)); setDirty(false); renderSettings(); };
+$("save").onclick = async () => {
+  const r = await api("/api/settings", draft);
+  if (r.ok) { setDirty(false); toast("Réglages enregistrés ✓"); refresh(); } else toast("Erreur");
+};
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+refresh();
+</script>
+</body>
+</html>

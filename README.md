@@ -29,6 +29,18 @@ synthétisés donc sans droits d'auteur) et l'envoie sur TikTok à l'heure chois
 Les boucles infinies ont une dernière image identique à la première : quand TikTok relance la
 vidéo, la coupure est invisible et on attend une fin qui n'arrive jamais.
 
+## Centre de contrôle (site web)
+Un petit site, `panel`, tourne à côté du robot. On peut y :
+- mettre en pause ou relancer la publication, choisir les heures et le nombre de vidéos par jour ;
+- cocher les types de vidéos (par exemple uniquement les patates) ;
+- régler les proportions de durées (courte, moyenne, normale, longue) ;
+- **générer et envoyer une vidéo tout de suite**, puis copier sa légende ;
+- revoir les dernières vidéos, copier leur légende ou envoyer celles qui ne l'ont pas été.
+
+Les changements s'appliquent sans redémarrage. Pour l'ouvrir depuis le téléphone via Tailscale,
+mets l'IP Tailscale du VPS (`tailscale ip -4`) dans `PANEL_BIND` du `.env`, lance
+`docker compose up -d panel`, puis ouvre `http://IP-TAILSCALE:8090` sur le téléphone.
+
 ## Durée des vidéos
 Chaque jour, une durée est tirée au hasard : **court** (18–28 s), **moyen** (30–42 s),
 **normal** (45–58 s) ou **long** (62–72 s). Si aucune vidéo de plus de 61 s n'est sortie

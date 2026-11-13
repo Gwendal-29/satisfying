@@ -14,6 +14,7 @@ import time
 
 import numpy as np
 
+import settings
 from satisfy.core import render_scene
 from satisfy.scenes import SCENES
 
@@ -41,12 +42,20 @@ LONG_MIN = 61.0
 
 
 def pick_length(hist=None):
-    """Durée du jour : longue si aucune vidéo >= 61 s dans les 6 dernières, sinon au hasard."""
+    """Durée du jour : longue si aucune vidéo >= 61 s dans les 6 dernières, sinon au hasard
+    (proportions réglables dans le centre de contrôle)."""
     hist = _history() if hist is None else hist
-    recent = hist[-6:]
-    if not any(h.get("duration", 0) >= LONG_MIN for h in recent):
+    cfg = settings.load()
+    if cfg["weekly_long"] and not any(h.get("duration", 0) >= LONG_MIN for h in hist[-6:]):
         return "long"
-    return random.choices(list(WEIGHTS), weights=list(WEIGHTS.values()))[0]
+    weights = cfg["weights"] or WEIGHTS
+    return random.choices(list(weights), weights=list(weights.values()))[0]
+
+
+def allowed_scenes():
+    """Types autorisés : ceux cochés dans le centre de contrôle, sinon SCENES du .env, sinon tous."""
+    chosen = {t.lower() for t in settings.load()["types"]} or set(POOL)
+    return [c for c in SCENES if not chosen or c.__name__.lower() in chosen] or SCENES
 
 
 def pick_scene(name=None, length=None):
@@ -55,7 +64,7 @@ def pick_scene(name=None, length=None):
             if cls.__name__.lower() == name.lower():
                 return cls
         raise SystemExit(f"Type inconnu : {name}. Types : {', '.join(c.__name__ for c in SCENES)}")
-    allowed = [c for c in SCENES if not POOL or c.__name__.lower() in POOL] or SCENES
+    allowed = allowed_scenes()
     if length:
         allowed = [c for c in allowed if length in c.lengths] or allowed
     # Rotation équilibrée : on tire parmi les types les moins utilisés jusqu'ici, donc chaque
