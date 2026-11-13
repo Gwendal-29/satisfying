@@ -255,10 +255,14 @@ class PotatoMerge(Scene):
     titles = ["Attends la dernière patate...", "Qui sera la plus grosse ?", "Tu tiens jusqu'à la patate suprême ?"]
     final_text = "LA PATATE SUPRÊME !"
     final_voice = "la patate suprême"
+    random_cast = True  # PotatoMerge : nouvelle distribution de personnages à chaque vidéo
 
     def __init__(self, rng):
         super().__init__(rng)
         self.gravity = float(rng.choice([0.0, 0.0, 700.0]))  # le plus souvent en apesanteur
+        if self.random_cast:
+            from .potatoes import make_cast
+            self.names, self.draw_item, self.final_text, self.final_voice = make_cast(rng)
         self.title = str(rng.choice(self.titles))
         self.top = len(self.names) - 1
         # Rythme : la dernière fusion arrive vers la durée voulue (≈ 47 s sans consigne).

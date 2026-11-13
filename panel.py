@@ -33,7 +33,11 @@ PASSWORD = os.environ.get("PANEL_PASSWORD", "")
 
 # Nom affiché et rubrique de chaque type dans l'interface
 LABELS = {
-    "PotatoMerge": ("Patates qui fusionnent", "Fusions"),
+    "PotatoMerge": ("Patates qui fusionnent", "Patates"),
+    "PotatoRace": ("Course de patates", "Patates"),
+    "PotatoSplit": ("Patate géante qui se divise", "Patates"),
+    "PotatoEscape": ("Patate qui s'échappe (solo / duel)", "Patates"),
+    "PotatoDuel": ("Duel de patates (deux équipes)", "Patates"),
     "PlanetMerge": ("Planètes qui fusionnent", "Fusions"),
     "SlimeMerge": ("Slimes qui fusionnent", "Fusions"),
     "EscapeRings": ("Balle qui sort des anneaux", "Balles et évasions"),
@@ -57,7 +61,7 @@ LABELS = {
     "PendulumWave": ("Vague de pendules", "Autres"),
     "Galton": ("Planche de Galton", "Autres"),
 }
-GROUPS = ["Fusions", "Balles et évasions", "3D et illusions", "Musique", "Autres"]
+GROUPS = ["Patates", "Fusions", "Balles et évasions", "3D et illusions", "Musique", "Autres"]
 
 
 # ------------------------------------------------------------------ tâche en arrière-plan

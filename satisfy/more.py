@@ -163,6 +163,7 @@ class PlanetMerge(PotatoMerge):
     titles = ["Attends le Soleil...", "Jusqu'où ça va grossir ?", "Tu tiens jusqu'au Soleil ?"]
     final_text = "LE SOLEIL !"
     final_voice = "le soleil"
+    random_cast = False
 
 
 # ------------------------------------------------------------------ fusion de slimes
@@ -214,6 +215,7 @@ class SlimeMerge(PotatoMerge):
     titles = ["Attends le roi des slimes...", "Lequel sera le plus gros ?", "Tu tiens jusqu'au roi ?"]
     final_text = "LE ROI DES SLIMES !"
     final_voice = "le roi des slimes"
+    random_cast = False
 
 
 # ------------------------------------------------------------------ balles qui se divisent
@@ -293,6 +295,12 @@ class SplitBalls(Scene):
                 _chord(self.audio, t, 0)
         return len(idx), int(hit.sum())
 
+    def _draw_balls(self, ctx, r, t):
+        for (x, y), rr, g in zip(self.p, r, self.gen):
+            ctx.set_source_rgb(*hsv(self.hue0 + 0.09 * g, 0.8, 1.0))
+            ctx.arc(CX + x, CY + y, rr, 0, TAU)
+            ctx.fill()
+
     def draw(self, ctx, t, frame):
         dt = 1 / (FPS * 2)
         born = hits = 0
@@ -329,11 +337,7 @@ class SplitBalls(Scene):
                 ctx.arc(CX + x, CY + y, 20 + 120 * age, 0, TAU)
                 ctx.stroke()
         self.wave = alive[-30:]
-        r = self._rad(self.gen)
-        for (x, y), rr, g in zip(self.p, r, self.gen):
-            ctx.set_source_rgb(*hsv(self.hue0 + 0.09 * g, 0.8, 1.0))
-            ctx.arc(CX + x, CY + y, rr, 0, TAU)
-            ctx.fill()
+        self._draw_balls(ctx, self._rad(self.gen), t)
         hook(ctx, self.title, None, t)
         text(ctx, f"{n}", W / 2, 1640, 96, (1, 1, 1))
         if self.done:
@@ -477,6 +481,17 @@ class ShapeEscape(Scene):
             best = np.minimum(best, (self.p - a) @ nin)
         return best
 
+    def _draw_balls(self, ctx, t):
+        for j, col in enumerate(self.cols):
+            for k, (x, y) in enumerate(self.trail[j]):
+                a = (k + 1) / len(self.trail[j])
+                ctx.set_source_rgba(*col, 0.3 * a)
+                ctx.arc(CX + x, CY + y, self.BR * a, 0, TAU)
+                ctx.fill()
+            ctx.set_source_rgb(*col)
+            ctx.arc(CX + self.p[j, 0], CY + self.p[j, 1], self.BR, 0, TAU)
+            ctx.fill()
+
     def draw(self, ctx, t, frame):
         lag = self.n * min(t, self.T) / self.T - self.k + 1.5 * max(0.0, t - self.T)
         g_want = float(np.clip(0.3 * 1.45 ** lag, 0.1, 0.92))
@@ -517,15 +532,7 @@ class ShapeEscape(Scene):
             ctx.set_source_rgba(*col, life)
             ctx.arc(CX + x, CY + y, 2 + 4 * life, 0, TAU)
             ctx.fill()
-        for j, col in enumerate(self.cols):
-            for k, (x, y) in enumerate(self.trail[j]):
-                a = (k + 1) / len(self.trail[j])
-                ctx.set_source_rgba(*col, 0.3 * a)
-                ctx.arc(CX + x, CY + y, self.BR * a, 0, TAU)
-                ctx.fill()
-            ctx.set_source_rgb(*col)
-            ctx.arc(CX + self.p[j, 0], CY + self.p[j, 1], self.BR, 0, TAU)
-            ctx.fill()
+        self._draw_balls(ctx, t)
 
         hook(ctx, self.title, None, t)
         if self.duel:

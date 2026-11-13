@@ -17,8 +17,12 @@ synthétisés donc sans droits d'auteur) et l'envoie sur TikTok à l'heure chois
 | `ClockSweep` | Deux aiguilles d'horloge brassent des billes qui se multiplient : « tu dis combien ? » |
 | `GearArcs` | Un engrenage et deux arcs en C dédoublent la balle à chaque coup : « 1 balle → 250 ? » |
 | `PinArt` | **Boucle infinie** : une plaque 3D en pixels change de forme sans fin |
-| `PotatoMerge` | Des patates fusionnent en patates plus grosses, une voix de plus en plus grave annonce chaque nouvelle |
+| `PotatoMerge` | Des patates fusionnent en patates plus grosses (8 personnages tirés parmi plus de 50), une voix de plus en plus grave annonce chaque nouvelle |
 | `MarbleMelody` | Une bille rebondit de tube en tube et joue des mélodies connues (libres de droits) : « Top 6 des mélodies » |
+| `PotatoRace` | Course de 3-4 patates dans des anneaux qui tournent : « quelle patate sort en premier ? » |
+| `PotatoSplit` | Une patate géante se divise à chaque rebond, chaque génération révèle de nouveaux personnages |
+| `PotatoEscape` | Une patate (ou un duel de deux patates) doit sortir de formes emboîtées |
+| `PotatoDuel` | Deux équipes de patates fusionnent côte à côte : la première à faire une patate géante gagne |
 | `PlanetMerge` | Fusion de planètes (astéroïde → Lune → … → Soleil), voix de plus en plus grave |
 | `SlimeMerge` | Fusion de slimes colorés jusqu'au roi des slimes |
 | `SplitBalls` | Une balle se divise à chaque rebond dans une forme qui tourne : « 1 balle → 512 ? » |
