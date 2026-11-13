@@ -191,12 +191,15 @@ def upload(path, caption=""):
     return publish_id
 
 
-def pending(limit=None):
+def pending(limit=None, only=None):
+    """Envoie les vidéos pas encore envoyées. `only` : n'envoyer que ces fichiers-là."""
     hist = _load(HISTORY, [])
     sent = 0
     for entry in hist:
         if limit is not None and sent >= limit:
             break
+        if only is not None and entry["file"] not in only:
+            continue
         if not entry.get("uploaded") and os.path.exists(entry["file"]):
             if sent:
                 time.sleep(15)  # TikTok limite le nombre d'envois par minute
