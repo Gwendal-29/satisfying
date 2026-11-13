@@ -23,6 +23,7 @@ def _crossed(t, period, at):
 
 
 class InfiniteCube(Scene):
+    lengths = ("court", "moyen", "normal", "long")
     """Une boîte tombe dans une boîte, la caméra plonge dedans... pour toujours."""
     loop = True
     title = "Cette vidéo ne finit jamais"
@@ -35,6 +36,11 @@ class InfiniteCube(Scene):
         super().__init__(rng)
         self.period = float(rng.choice([3.0, 3.5, 4.0]))
         self.cycles = len(MELODY)
+        if self.LENGTH:
+            self.cycles = 8 if self.LENGTH < 44 else 16
+            self.period = float(np.clip(self.LENGTH / self.cycles, 3.0, 4.6))
+            if self.LENGTH >= 61:
+                self.period = max(self.period, 61.5 / self.cycles)
         self.max_duration = self.period * self.cycles
         self.hue0 = rng.random()
         self.base = (W / 2, 1300.0)
@@ -82,7 +88,7 @@ class InfiniteCube(Scene):
             self.audio.add(t, whoosh(self.rng, 0.6), gain=0.35)
         if _crossed(t, self.period, self.LAND):
             self.audio.add(t, pop(110, 0.25), gain=0.8)
-            self.audio.add(t, bell(note_freq(MELODY[(c + 1) % self.cycles] + 5), dur=2.0, decay=0.6), gain=0.45)
+            self.audio.add(t, bell(note_freq(MELODY[(c + 1) % len(MELODY)] + 5), dur=2.0, decay=0.6), gain=0.45)
         if _crossed(t, self.period, self.BOUNCE):
             self.audio.add(t, pop(160, 0.15), gain=0.35)
 
@@ -125,6 +131,7 @@ class InfiniteCube(Scene):
 
 
 class InfiniteSpiral(Scene):
+    lengths = ("court", "moyen", "normal", "long")
     """Polygones emboîtés qui tournent en plongeant vers le centre, sans fin."""
     loop = True
     caption = "Fixe le centre 20 secondes puis regarde ta main"
@@ -138,6 +145,10 @@ class InfiniteSpiral(Scene):
         self.ratio = math.cos(math.pi / self.n) / math.cos(math.pi / self.n - self.theta)
         self.period = float(rng.choice([1.2, 1.5]))
         self.cycles = 16
+        if self.LENGTH:
+            need = max(self.LENGTH, 61.5 if self.LENGTH >= 61 else 0)
+            self.cycles = max(16, math.ceil(need / self.period / 8) * 8 if self.LENGTH >= 61
+                              else round(self.LENGTH / self.period / 8) * 8)
         self.palette = 8  # divise `cycles` : les couleurs bouclent aussi
         self.max_duration = self.period * self.cycles
         self.hue0 = rng.random()

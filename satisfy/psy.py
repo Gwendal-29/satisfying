@@ -103,7 +103,7 @@ def _place(track, sig, i, gain=1.0):
         track[:len(rest)] += rest * gain
 
 
-def psytrance(rng, bpm, bars, root_midi):
+def psytrance(rng, bpm, bars, root_midi, break_start):
     beat = 60 / bpm
     step = beat / 4
     n = int(round(SR * bars * 4 * beat))
@@ -119,7 +119,7 @@ def psytrance(rng, bpm, bars, root_midi):
                for _ in range(16)]
     pattern2 = [(p if rng.random() < 0.6 else int(rng.choice(scale)), a, on) for p, a, on in pattern]
     hat_c, hat_o = _hat(rng), _hat(rng, True)
-    break_start, drop = 16, 20  # mesures 17 à 20 : pause avec montée, drop à la 21
+    drop = break_start + 4  # 4 mesures de pause avec montée, puis le drop
     for bar in range(bars):
         brk = break_start <= bar < drop
         for b in range(4):
@@ -186,11 +186,17 @@ class PsyTrance(Scene):
     loop = True
     tags = ["#psytrance", "#trippy", "#psychedelic", "#hypnotic", "#pourtoi"]
     bed_freqs = (55.0,)
+    lengths = ("court", "moyen", "normal", "long")
 
     def __init__(self, rng):
         super().__init__(rng)
         self.bpm = float(rng.choice([144, 150]))
         self.bars = 32
+        if self.LENGTH:
+            self.bars = int(np.clip(round(self.LENGTH * self.bpm / 240 / 8) * 8, 16, 40))
+            if self.LENGTH >= 61:
+                self.bars = 40
+        self.brk = self.bars // 2
         self.max_duration = self.bars * 4 * 60 / self.bpm  # tombe pile sur un nombre entier d'images
         self.mode = str(rng.choice(["tunnel", "mandala", "spirale"]))
         self.fold = int(rng.choice([6, 8, 10, 12]))
@@ -200,7 +206,7 @@ class PsyTrance(Scene):
                                      "Regarde au centre jusqu'au drop"]))
         self.caption = "Mets le son à fond et fixe le centre jusqu'au drop..."
         root = int(rng.choice([40, 41, 42, 43]))  # mi, fa, fa#, sol : tonalités typiques
-        track = psytrance(rng, self.bpm, self.bars, root)
+        track = psytrance(rng, self.bpm, self.bars, root, self.brk)
         self._add_stereo(track)
         # grille polaire précalculée
         ys, xs = np.mgrid[0:RH, 0:RW].astype(np.float32)
@@ -220,7 +226,7 @@ class PsyTrance(Scene):
     def _kick_env(self, t):
         beat = 60 / self.bpm
         bar = int(t / (4 * beat))
-        if 16 <= bar < 20:
+        if self.brk <= bar < self.brk + 4:
             return 0.0
         ph = (t % beat) / beat
         return math.exp(-ph * 7)

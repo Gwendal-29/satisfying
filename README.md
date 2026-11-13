@@ -19,10 +19,22 @@ synthétisés donc sans droits d'auteur) et l'envoie sur TikTok à l'heure chois
 | `PinArt` | **Boucle infinie** : une plaque 3D en pixels change de forme sans fin |
 | `PotatoMerge` | Des patates fusionnent en patates plus grosses, une voix de plus en plus grave annonce chaque nouvelle |
 | `MarbleMelody` | Une bille rebondit de tube en tube et joue des mélodies connues (libres de droits) : « Top 6 des mélodies » |
+| `PlanetMerge` | Fusion de planètes (astéroïde → Lune → … → Soleil), voix de plus en plus grave |
+| `SlimeMerge` | Fusion de slimes colorés jusqu'au roi des slimes |
+| `SplitBalls` | Une balle se divise à chaque rebond dans une forme qui tourne : « 1 balle → 512 ? » |
+| `ShapeEscape` | Formes emboîtées qui tournent, chacune avec une sortie. Solo ou duel Rouge contre Bleu |
+| `ParticleMorph` | **Boucle infinie** : nuage de particules 3D qui devient sphère, cube, cœur, galaxie… |
 | `Polyrhythm`, `PendulumWave`, `Galton`, `Sorting` | Polyrythmie, pendules, planche de Galton, son d'un tri |
 
 Les boucles infinies ont une dernière image identique à la première : quand TikTok relance la
 vidéo, la coupure est invisible et on attend une fin qui n'arrive jamais.
+
+## Durée des vidéos
+Chaque jour, une durée est tirée au hasard : **court** (18–28 s), **moyen** (30–42 s),
+**normal** (45–58 s) ou **long** (62–72 s). Si aucune vidéo de plus de 61 s n'est sortie
+dans les 6 derniers jours, la vidéo du jour est forcément longue : il y en a donc au moins
+une par semaine. Chaque type adapte son rythme à la durée demandée.
+`python generate.py --length long` impose une durée.
 
 ## 1. Créer l'app TikTok (une seule fois)
 1. Va sur https://developers.tiktok.com, puis **Manage apps → Connect an app**. Plateforme : **Desktop**.

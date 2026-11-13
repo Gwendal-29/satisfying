@@ -35,11 +35,18 @@ class RingCountdown(Scene):
     tags = ["#satisfying", "#oddlysatisfying", "#simulation", "#asmr", "#pourtoi"]
     outro = 2.5
     max_duration = 58.0
+    lengths = ("court", "moyen", "normal", "long")
 
     def __init__(self, rng):
         super().__init__(rng)
-        self.N = int(rng.choice([30, 40, 50]))
-        self.T = float(rng.choice([35, 40, 45]))
+        tgt = self.target(None)
+        if tgt:
+            self.T = float(tgt - 4)
+            self.N = int(np.clip(round(self.T * 1.1 / 5) * 5, 20, 60))
+            self.max_duration = self.T + 18
+        else:
+            self.N = int(rng.choice([30, 40, 50]))
+            self.T = float(rng.choice([35, 40, 45]))
         self.r0, rmax = 70.0, 960.0
         self.sp = (rmax - self.r0) / self.N
         self.lw = self.sp * 0.42
@@ -163,6 +170,7 @@ class RingCountdown(Scene):
 
 class Katana(Scene):
     title = "KATANA"
+    lengths = ("court", "moyen", "normal")
     caption = "1 balle, combien de morceaux à la fin ?"
     tags = ["#satisfying", "#katana", "#simulation", "#asmr", "#pourtoi"]
     outro = 2.5
@@ -171,7 +179,8 @@ class Katana(Scene):
 
     def __init__(self, rng):
         super().__init__(rng)
-        self.gens = int(rng.choice([6, 7]))
+        tgt = self.target(None)
+        self.gens = (6 if tgt < 30 else 7) if tgt else int(rng.choice([6, 7]))
         r0 = float(rng.choice([75, 85]))
         self.p = np.array([[0.0, -180.0]])
         a = rng.uniform(0, TAU)
@@ -306,6 +315,7 @@ class Katana(Scene):
 
 class ClockSweep(Scene):
     title = "Tu dis combien à la fin ?"
+    lengths = ("court", "moyen", "normal", "long")
     caption = "Les aiguilles mélangent tout... ton pronostic ?"
     tags = ["#satisfying", "#physics", "#simulation", "#asmr", "#pourtoi"]
     outro = 2.5
@@ -314,8 +324,10 @@ class ClockSweep(Scene):
 
     def __init__(self, rng):
         super().__init__(rng)
-        self.cap = int(rng.choice([800, 1200, 1600]))
-        self.target = float(rng.choice([30, 35, 40]))
+        tgt = self.target(None)
+        self.target = float(tgt - 2) if tgt else float(rng.choice([30, 35, 40]))
+        self.cap = int(rng.choice([500, 800] if self.target < 28 else [800, 1200, 1600]))
+        self.max_duration = self.target + 15
         self.r = self.R * math.sqrt(0.5 / self.cap)
         sign = rng.choice([-1, 1])
         w1 = sign * rng.uniform(0.9, 1.4)
@@ -424,6 +436,7 @@ class ClockSweep(Scene):
 
 class GearArcs(Scene):
     caption = "Chaque coup d'arc la dédouble..."
+    lengths = ("court", "moyen", "normal", "long")
     tags = ["#satisfying", "#physics", "#simulation", "#asmr", "#pourtoi"]
     outro = 2.5
     max_duration = 55.0
@@ -432,8 +445,10 @@ class GearArcs(Scene):
 
     def __init__(self, rng):
         super().__init__(rng)
-        self.cap = int(rng.choice([100, 150, 250]))
-        self.target = float(rng.choice([30, 35, 40]))
+        tgt = self.target(None)
+        self.target = float(tgt - 2) if tgt else float(rng.choice([30, 35, 40]))
+        self.cap = int(rng.choice([64, 100] if self.target < 28 else [100, 150, 250]))
+        self.max_duration = self.target + 15
         self.br = float(np.clip(self.R * math.sqrt(0.18 / self.cap), 9, 18))
         self.title = f"1 balle → {self.cap} ?"
         self.orbit = rng.uniform(40, 130)
@@ -609,6 +624,7 @@ def _shapes(u, v):
 class PinArt(Scene):
     loop = True
     caption = "La plaque ne s'arrête jamais de changer de forme"
+    lengths = ("court", "moyen", "normal", "long")
     tags = ["#satisfying", "#3d", "#asmr", "#oddlysatisfying", "#pourtoi"]
     N = 34
 
@@ -618,9 +634,13 @@ class PinArt(Scene):
         self.u, self.v = np.meshgrid(lin, lin, indexing="ij")
         shapes = _shapes(self.u, self.v)
         others = [k for k in shapes if k != "plat"]
-        pick = list(rng.choice(others, size=5, replace=False))
-        self.seq = [shapes["plat"]] + [shapes[k] for k in pick]
         self.seg = float(rng.choice([4.0, 4.5, 5.0]))
+        m = 6
+        if self.LENGTH:
+            m = int(np.clip(round(self.LENGTH / self.seg), 3, len(others) + 1))
+            self.seg = max(self.seg, (61.5 / m) if self.LENGTH >= 61 else 0, self.LENGTH * 0.8 / m)
+        pick = list(rng.choice(others, size=m - 1, replace=False))
+        self.seq = [shapes["plat"]] + [shapes[k] for k in pick]
         self.max_duration = self.seg * len(self.seq)
         self.hue0 = float(rng.choice([0.42, 0.5, 0.58, 0.75, 0.9, 0.08]))
         self.title = str(rng.choice(["Tu peux pas arrêter de regarder", "Attends la forme suivante...",

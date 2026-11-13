@@ -49,13 +49,16 @@ class EscapeBox(Scene):
     tags = ["#satisfying", "#physics", "#simulation", "#asmr", "#pourtoi"]
     outro = 2.0
     max_duration = 58.0
+    lengths = ("court", "moyen", "normal", "long")
     HALF = 480.0        # demi-côté de l'arène
     WALL = 14.0         # épaisseur des parois de la boîte
 
     def __init__(self, rng):
         super().__init__(rng)
-        self.cap = int(rng.choice([1000, 1500, 2000]))
-        self.target_s = int(rng.choice([30, 40, 45]))
+        tgt = self.target(None)
+        self.target_s = int(round(tgt - 1)) if tgt else int(rng.choice([30, 40, 45]))
+        self.cap = int(rng.choice([500, 800, 1000] if self.target_s < 30 else [1000, 1500, 2000]))
+        self.max_duration = self.target_s + 15
         self.title = f"{self.cap} billes en {self.target_s} s ?"
         # Rayon choisi pour que l'arène soit bien pleine (~55 %) à la fin.
         self.r = math.sqrt(0.55 * (2 * self.HALF) ** 2 / (self.cap * math.pi))

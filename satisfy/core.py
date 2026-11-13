@@ -216,6 +216,11 @@ class Scene:
     max_duration = 55.0
     outro = 1.5
     loop = False  # True : vidéo qui boucle parfaitement, durée exacte = max_duration
+    # Durée visée (s), fixée par generate.py avant de créer la scène. None = durée « naturelle ».
+    LENGTH = None
+    # Catégories de durée que la scène sait tenir : court, moyen, normal, long (>= 61 s).
+    lengths = ("normal",)
+    min_duration = 0.0  # la vidéo ne s'arrête jamais avant (garantie des 61 s)
     title = ""
     caption = ""
     bed_freqs = (130.81, 196.0, 261.63)
@@ -224,6 +229,10 @@ class Scene:
         self.rng = rng
         self.audio = Audio()
         self.done = False
+
+    def target(self, default):
+        """Durée visée pour le contenu (sans l'outro)."""
+        return (self.LENGTH - self.outro) if self.LENGTH else default
 
     def draw(self, ctx, t, frame):
         raise NotImplementedError
@@ -243,7 +252,7 @@ def render_scene(scene, out_path):
         stdin=subprocess.PIPE)
 
     frame, done_at = 0, None
-    max_frames = round(scene.max_duration * FPS)
+    max_frames = round(max(scene.max_duration, scene.min_duration + 2) * FPS)
     while frame < max_frames:
         t = frame / FPS
         ctx.save()
@@ -254,7 +263,8 @@ def render_scene(scene, out_path):
         frame += 1
         if scene.done and done_at is None:
             done_at = frame
-        if not scene.loop and done_at is not None and frame - done_at >= scene.outro * FPS:
+        if (not scene.loop and done_at is not None and frame - done_at >= scene.outro * FPS
+                and frame >= scene.min_duration * FPS):
             break
     enc.stdin.close()
     if enc.wait() != 0:

@@ -248,12 +248,24 @@ class PotatoMerge(Scene):
     tags = ["#patate", "#merge", "#satisfying", "#asmr", "#pourtoi"]
     outro = 4.0
     max_duration = 75.0
+    lengths = ("moyen", "normal", "long")
+    # Thème (les sous-classes en changent) : noms des niveaux, dessin, accroches, phrase finale.
+    names = NAMES
+    draw_item = staticmethod(draw_potato)
+    titles = ["Attends la dernière patate...", "Qui sera la plus grosse ?", "Tu tiens jusqu'à la patate suprême ?"]
+    final_text = "LA PATATE SUPRÊME !"
+    final_voice = "la patate suprême"
 
     def __init__(self, rng):
         super().__init__(rng)
         self.gravity = float(rng.choice([0.0, 0.0, 700.0]))  # le plus souvent en apesanteur
-        self.title = str(rng.choice(["Attends la dernière patate...", "Qui sera la plus grosse ?",
-                                     "Tu tiens jusqu'à la patate suprême ?"]))
+        self.title = str(rng.choice(self.titles))
+        self.top = len(self.names) - 1
+        # Rythme : la dernière fusion arrive vers la durée voulue (≈ 47 s sans consigne).
+        tgt = self.target(None)
+        self.k = float(np.clip(44.0 / (tgt - 1), 0.6, 1.8)) if tgt else 1.0
+        if tgt:
+            self.max_duration = tgt + 30
         self.p = np.zeros((0, 2))
         self.v = np.zeros((0, 2))
         self.tier = np.zeros(0, int)
@@ -274,9 +286,9 @@ class PotatoMerge(Scene):
 
     # -- voix et annonces ------------------------------------------------------------
     def _announce(self, tier, t):
-        self.banner = (f"NOUVEAU : {NAMES[tier]}", t)
+        self.banner = (f"NOUVEAU : {self.names[tier]}", t)
         start = max(t, self.last_voice + 0.2)
-        sig = speak(NAMES[tier].lower() if tier < TIERS - 1 else "la patate suprême",
+        sig = speak(self.names[tier].lower() if tier < self.top else self.final_voice,
                     deep=-2.2 * tier, rng=self.rng)
         self.audio.add(start, sig, gain=0.85)
         self.last_voice = start + len(sig) / 44100
@@ -291,7 +303,7 @@ class PotatoMerge(Scene):
         area = float((math.pi * _radius(self.tier) ** 2).sum()) if len(self.tier) else 0.0
         if area > 0.5 * math.pi * R_FLASK ** 2:
             return
-        top = min(3, int(t / 12))  # plus tard, des patates déjà un peu grosses tombent aussi
+        top = min(3, int(t * self.k / 12))  # plus tard, des patates déjà un peu grosses tombent aussi
         tier = int(self.rng.integers(0, top + 1)) if self.rng.random() < 0.35 else 0
         self.p = np.vstack([self.p, [[self.rng.uniform(-NECK * 0.4, NECK * 0.4), NECK_TOP - CY + 30]]])
         self.v = np.vstack([self.v, [[self.rng.normal(0, 40), 420.0]]])
@@ -302,7 +314,7 @@ class PotatoMerge(Scene):
         self.grow = np.append(self.grow, 1.0)
         if tier not in self.found:
             self.found.add(tier)
-        self.next_spawn = t + float(self.rng.uniform(0.28, 0.45))
+        self.next_spawn = t + float(self.rng.uniform(0.28, 0.45)) / self.k
 
     def _walls(self, r):
         p, v = self.p, self.v
@@ -338,7 +350,7 @@ class PotatoMerge(Scene):
         used = set()
         kill = []
         for i, j in zip(I, J):
-            if i in used or j in used or self.tier[i] >= TIERS - 1:
+            if i in used or j in used or self.tier[i] >= self.top:
                 continue
             used.update((i, j))
             nt = self.tier[i] + 1
@@ -361,7 +373,7 @@ class PotatoMerge(Scene):
             if nt not in self.found:
                 self.found.add(nt)
                 self._announce(nt, t)
-            if nt == TIERS - 1:
+            if nt == self.top:
                 self.done = True
                 self.end_t = t
                 for k, st in enumerate((0, 4, 7, 12)):
@@ -374,7 +386,7 @@ class PotatoMerge(Scene):
 
     def _attract(self, t, dt):
         """Les patates identiques s'attirent doucement (et de plus en plus) pour que ça fusionne."""
-        strength = 160 + 12 * t
+        strength = (160 + 12 * t * self.k) * self.k
         for tier in np.unique(self.tier):
             idx = np.flatnonzero(self.tier == tier)
             if len(idx) < 2:
@@ -465,7 +477,7 @@ class PotatoMerge(Scene):
         for i in order:
             sp = np.hypot(*self.v[i]) + 1e-6
             look = (self.v[i, 0] / sp, self.v[i, 1] / sp)
-            draw_potato(ctx, CX + self.p[i, 0], CY + self.p[i, 1], r[i], int(self.tier[i]),
+            self.draw_item(ctx, CX + self.p[i, 0], CY + self.p[i, 1], r[i], int(self.tier[i]),
                         0.35 * math.sin(self.ang[i]), look, t, self.seed[i], blink and i % 3 == 0)
         # poussière d'étoiles
         keep = []
@@ -487,7 +499,7 @@ class PotatoMerge(Scene):
             text(ctx, self.banner[0], W / 2, 400, 50, (1, 0.85, 0.2), a)
         text(ctx, f"SCORE : {self.score:,}".replace(",", " "), W / 2, 1610, 80)
         # barre des niveaux découverts
-        n = TIERS
+        n = len(self.names)
         gap = 96
         x0 = W / 2 - gap * (n - 1) / 2
         for k in range(n):
@@ -500,7 +512,7 @@ class PotatoMerge(Scene):
             ctx.arc(x, y, 38, 0, TAU)
             ctx.stroke()
             if k in self.found:
-                draw_potato(ctx, x, y + 4, 26, k, 0, (0, 0), t, 1.0)
+                self.draw_item(ctx, x, y + 4, 26, k, 0, (0, 0), t, 1.0)
             else:
                 ctx.select_font_face(FONT, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
                 ctx.set_font_size(34)
@@ -510,4 +522,4 @@ class PotatoMerge(Scene):
                 ctx.show_text("?")
         if self.done:
             pulse = 1 + 0.06 * math.sin(t * 8)
-            text(ctx, "LA PATATE SUPRÊME !", W / 2, 1830, 64 * pulse, (1, 0.85, 0.2))
+            text(ctx, self.final_text, W / 2, 1830, 64 * pulse, (1, 0.85, 0.2))

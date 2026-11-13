@@ -49,15 +49,19 @@ def _freq(midi):
 class MarbleMelody(Scene):
     tags = ["#satisfying", "#music", "#marble", "#asmr", "#pourtoi"]
     outro = 2.5
+    lengths = ("court", "moyen", "normal", "long")
 
     def __init__(self, rng):
         super().__init__(rng)
         self.beat = 60 / float(rng.choice([120, 132, 144]))
         names = list(rng.permutation(list(SONGS)))
+        limit = (self.LENGTH - self.outro - 1.5) if self.LENGTH else 53
+        # vidéo courte : on garde le début de chaque mélodie (le plus reconnaissable)
+        self.cut = 8 if limit < 30 else None
         picked, total = [], 1.2
         for name in names:
-            d = sum(b for _, b in SONGS[name]) * self.beat + TRANSITION
-            if len(picked) < 6 and total + d < 53:
+            d = sum(b for _, b in SONGS[name][:self.cut]) * self.beat + TRANSITION
+            if total + d < limit or not picked:
                 picked.append(name)
                 total += d
         self.songs = picked
@@ -67,6 +71,7 @@ class MarbleMelody(Scene):
         self.caption = f"Top {self.n} des mélodies que tout le monde connaît... tu les as toutes reconnues ?"
         self.hue0 = rng.random()
         self.tube_len = rng.uniform(150, 200)
+        self.skin = str(rng.choice(["tubes", "barres"]))  # carillon ou xylophone
         self._build()
         self.max_duration = self.hits[-1][0] + 1.5 + self.outro
         self.played = 0
@@ -84,7 +89,7 @@ class MarbleMelody(Scene):
         self.kinds = []     # trajet APRÈS l'impact : "hop" ou "rail"
         self.song_end = []  # instant de la dernière note de chaque mélodie
         for s, name in enumerate(self.songs):
-            notes = SONGS[name]
+            notes = SONGS[name][:self.cut]
             for k, (midi, dur) in enumerate(notes):
                 last = k == len(notes) - 1
                 self.hits.append((t, midi, s, last))
@@ -193,6 +198,64 @@ class MarbleMelody(Scene):
         ctx.set_source_rgb(*(col * 0.25 + 0.02))
         ctx.fill()
 
+    def _bar(self, ctx, x, y, midi, lit):
+        """Lame de xylophone : plus grave = plus longue, bois sombre qui s'allume dans sa couleur."""
+        sx, sy = self._screen(x, y)
+        L = 190 + (72 - midi) * 7
+        ax, ay = math.cos(math.radians(62)), math.sin(math.radians(62))
+        nx, ny = -ay * 30, ax * 30
+        hue = self.hue0 + (midi % 12) / 12
+        base = np.array(hsv(hue, 0.75, 1.0))
+        wood = np.array([0.32, 0.2, 0.12])
+        col = wood * (1 - lit) + base * lit
+        sx, sy = sx - ax * L * 0.15, sy - ay * L * 0.15
+        ex, ey = sx + ax * L, sy + ay * L
+        if lit > 0.05:
+            mx, my = (sx + ex) / 2, (sy + ey) / 2
+            g = cairo.RadialGradient(mx, my, 10, mx, my, L * 0.7)
+            g.add_color_stop_rgba(0, *base, 0.3 * lit)
+            g.add_color_stop_rgba(1, *base, 0)
+            ctx.set_source(g)
+            ctx.rectangle(mx - L * 0.7, my - L * 0.7, L * 1.4, L * 1.4)
+            ctx.fill()
+        ctx.set_source_rgba(0, 0, 0, 0.25)
+        ctx.move_to(sx + nx + 30, sy + ny + 30)
+        for px, py in ((ex + nx + 30, ey + ny + 30), (ex - nx + 30, ey - ny + 30), (sx - nx + 30, sy - ny + 30)):
+            ctx.line_to(px, py)
+        ctx.close_path()
+        ctx.fill()
+        depth = 16
+        # face avant (épaisseur), puis dessus avec un dégradé
+        ctx.set_source_rgb(*(col * 0.45))
+        ctx.move_to(sx + nx, sy + ny)
+        ctx.line_to(ex + nx, ey + ny)
+        ctx.line_to(ex + nx, ey + ny + depth)
+        ctx.line_to(sx + nx, sy + ny + depth)
+        ctx.close_path()
+        ctx.fill()
+        ctx.set_source_rgb(*(col * 0.6))
+        ctx.move_to(ex + nx, ey + ny)
+        ctx.line_to(ex - nx, ey - ny)
+        ctx.line_to(ex - nx, ey - ny + depth)
+        ctx.line_to(ex + nx, ey + ny + depth)
+        ctx.close_path()
+        ctx.fill()
+        g = cairo.LinearGradient(sx + nx, sy + ny, sx - nx, sy - ny)
+        g.add_color_stop_rgb(0, *np.minimum(1, col * 0.9))
+        g.add_color_stop_rgb(0.5, *np.minimum(1, col * 1.25 + 0.08))
+        g.add_color_stop_rgb(1, *np.minimum(1, col * 0.8))
+        ctx.set_source(g)
+        ctx.move_to(sx + nx, sy + ny)
+        ctx.line_to(ex + nx, ey + ny)
+        ctx.line_to(ex - nx, ey - ny)
+        ctx.line_to(sx - nx, sy - ny)
+        ctx.close_path()
+        ctx.fill()
+        ctx.set_source_rgb(0.75, 0.75, 0.78)
+        for u in (0.22, 0.78):
+            ctx.arc(sx + ax * L * u, sy + ay * L * u, 5, 0, TAU)
+            ctx.fill()
+
     def _rail(self, ctx, p0, p1):
         (x0, y0), (x1, y1) = p0, p1
         pts = []
@@ -262,8 +325,9 @@ class MarbleMelody(Scene):
         while self.played < len(self.hits) and self.hits[self.played][0] <= t:
             th, midi, s, last = self.hits[self.played]
             f = _freq(midi)
-            self.audio.add(th, bell(f, dur=1.8, decay=0.7), gain=0.32)
-            self.audio.add(th, marimba(f, 0.9), gain=0.38)
+            xylo = self.skin == "barres"
+            self.audio.add(th, bell(f, dur=1.8, decay=0.7), gain=0.1 if xylo else 0.32)
+            self.audio.add(th, marimba(f * (2 if xylo else 1), 0.9), gain=0.55 if xylo else 0.38)
             self.lit[self.played] = 1.0
             self.played += 1
         while self.revealed < self.n and t >= self.song_end[self.revealed] + 0.4:
@@ -297,7 +361,7 @@ class MarbleMelody(Scene):
                 self._rail(ctx, self.points[k], self.points[k + 1])
         for k in range(lo, hi):
             x, y = self.points[k]
-            self._tube(ctx, x, y, self.hits[k][1], self.lit[k])
+            (self._tube if self.skin == "tubes" else self._bar)(ctx, x, y, self.hits[k][1], self.lit[k])
 
         # ombre de la bille sur le tube visé
         k_next = min(len(self.points) - 1, bisect.bisect_right(self.times, t))
