@@ -53,8 +53,15 @@
   .switch input:checked + span::before { transform: translateX(22px); }
   .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .quick button { padding: 8px 12px; font-size: 14px; }
-  .group { margin-top: 12px; }
-  .group-title { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .group { margin-top: 14px; }
+  .group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .group-head .gi { font-size: 22px; line-height: 1; }
+  .group-head .gt { flex: 1; min-width: 0; }
+  .group-head .gt strong { font-size: 15px; }
+  .group-head .gt .count { color: var(--muted); font-size: 13px; font-weight: normal; margin-left: 6px; }
+  .group-head .gt div { font-size: 12px; color: var(--muted); }
+  .group-head button { padding: 6px 10px; font-size: 13px; white-space: nowrap; }
+  .quick button.on { border-color: var(--accent); color: var(--accent); }
   .type { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px;
           background: var(--card2); margin-bottom: 6px; border: 1px solid transparent; }
   .type.on { border-color: var(--accent); }
@@ -144,11 +151,8 @@
   <!-- Types -->
   <section class="card">
     <h2>Types de vidéos</h2>
-    <div class="quick">
-      <button data-quick="Patates">🥔 Que les patates</button>
-      <button data-quick="Fusions">Planètes et slimes</button>
-      <button data-quick="all">Tout</button>
-    </div>
+    <div class="hint" style="margin:0 0 6px">Ne garder qu'un thème :</div>
+    <div class="quick" id="quick"></div>
     <div id="types"></div>
     <div class="hint">Les types cochés passent chacun leur tour, dans un ordre aléatoire. Si rien n'est coché, tous les types sont utilisés.</div>
   </section>
@@ -238,7 +242,8 @@ function renderRunTypes() {
   const sel = $("runType"); const cur = sel.value;
   sel.replaceChildren(el("option", { value: "" }, "🎲 Au hasard (parmi les types cochés)"));
   for (const g of S.groups) {
-    const og = el("optgroup", { label: g });
+    const th = (S.themes || []).find((x) => x.name === g);
+    const og = el("optgroup", { label: th ? `${th.icon} ${g}` : g });
     for (const sc of S.scenes.filter((x) => x.group === g)) og.append(el("option", { value: sc.name }, sc.label));
     if (og.children.length) sel.append(og);
   }
@@ -260,7 +265,17 @@ function renderSettings() {
   for (const g of S.groups) {
     const list = S.scenes.filter((x) => x.group === g);
     if (!list.length) continue;
-    const grp = el("div", { class: "group" }, el("div", { class: "group-title" }, g));
+    const th = (S.themes || []).find((x) => x.name === g) || { icon: "", desc: "" };
+    const n = list.filter((sc) => chosen.has(sc.name)).length;
+    const all = n === list.length;
+    const grp = el("div", { class: "group" }, el("div", { class: "group-head" },
+      el("span", { class: "gi" }, th.icon),
+      el("div", { class: "gt" }, el("strong", {}, g, el("span", { class: "count" }, `${n}/${list.length}`)), el("div", {}, th.desc)),
+      el("button", { onclick: () => edit((x) => {
+        const set = new Set(x.types);
+        for (const sc of list) all ? set.delete(sc.name) : set.add(sc.name);
+        x.types = [...set];
+      }) }, all ? "Rien" : "Tout")));
     for (const sc of list) {
       const on = chosen.has(sc.name);
       const cb = el("input", { type: "checkbox", checked: on, onchange: (e) => edit((x) => {
@@ -271,6 +286,15 @@ function renderSettings() {
     }
     box.append(grp);
   }
+
+  const quick = $("quick"); quick.replaceChildren();
+  for (const th of S.themes || []) {
+    const names = S.scenes.filter((x) => x.group === th.name).map((x) => x.name);
+    const only = names.length && d.types.length === names.length && names.every((x) => chosen.has(x));
+    quick.append(el("button", { class: only ? "on" : "", onclick: () => edit((x) => x.types = names) }, `${th.icon} ${th.name}`));
+  }
+  const everything = !d.types.length || d.types.length === S.scenes.length;
+  quick.append(el("button", { class: everything ? "on" : "", onclick: () => edit((x) => x.types = S.scenes.map((y) => y.name)) }, "🎲 Tout"));
 
   const w = $("weights"); w.replaceChildren();
   const total = Object.values(d.weights).reduce((a, b) => a + b, 0) || 1;
@@ -368,13 +392,6 @@ $("addTime").onclick = () => {
 };
 $("perMinus").onclick = () => edit((x) => x.per_run = Math.max(1, x.per_run - 1));
 $("perPlus").onclick = () => edit((x) => x.per_run = Math.min(5, x.per_run + 1));
-document.querySelectorAll("[data-quick]").forEach((b) => b.onclick = () => edit((x) => {
-  const q = b.dataset.quick;
-  if (q === "all") x.types = S.scenes.map((s) => s.name);
-  else if (q === "none") x.types = [];
-  else if (q === "potato") x.types = ["PotatoMerge"];
-  else x.types = S.scenes.filter((s) => s.group === q).map((s) => s.name);
-}));
 $("cancel").onclick = () => { draft = JSON.parse(JSON.stringify(S.settings)); setDirty(false); renderSettings(); };
 $("save").onclick = async () => {
   const r = await api("/api/settings", draft);

@@ -31,39 +31,51 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 PORT = int(os.environ.get("PANEL_PORT", "8090"))
 PASSWORD = os.environ.get("PANEL_PASSWORD", "")
 
-# Nom affiché et rubrique de chaque type dans l'interface
+# Thèmes du centre de contrôle : (nom, icône, description), dans l'ordre d'affichage
+THEMES = [
+    ("Patates", "🥔", "Personnages, voix, fusions, courses et duels"),
+    ("Musique", "🎵", "Musiques connues : bille sur chaque note, devine la musique"),
+    ("Hypnose", "🌀", "Psytrance, spirales et illusions qui bouclent à l'infini"),
+    ("3D", "🧊", "Rendus 3D : plaque d'aiguilles, particules qui se transforment"),
+    ("Fusions", "🪐", "Planètes et slimes qui fusionnent et grossissent"),
+    ("Évasions", "🚪", "Balles qui doivent sortir des anneaux, boîtes et formes"),
+    ("Balles qui se divisent", "✨", "Balles qui se multiplient, grandissent ou se font couper"),
+    ("Physique", "⚙️", "Mécaniques, pendules, planche de Galton, rythmes"),
+]
+GROUPS = [name for name, _, _ in THEMES]
+
+# Nom affiché et thème de chaque type
 LABELS = {
     "PotatoMerge": ("Patates qui fusionnent", "Patates"),
     "PotatoRace": ("Course de patates", "Patates"),
     "PotatoSplit": ("Patate géante qui se divise", "Patates"),
     "PotatoEscape": ("Patate qui s'échappe (solo / duel)", "Patates"),
     "PotatoDuel": ("Duel de patates (deux équipes)", "Patates"),
+    "SongBounce": ("Bille qui rebondit sur chaque note", "Musique"),
+    "SongRing": ("Devine la musique (hachée puis entière)", "Musique"),
+    "MarbleMelody": ("Bille musicale (top mélodies)", "Musique"),
+    "PsyTrance": ("Psytrance hypnotique (boucle)", "Hypnose"),
+    "InfiniteSpiral": ("Spirale hypnotique (boucle)", "Hypnose"),
+    "InfiniteCube": ("Cube infini (boucle)", "Hypnose"),
+    "PinArt": ("Plaque 3D qui se déforme (boucle)", "3D"),
+    "ParticleMorph": ("Particules 3D qui se transforment", "3D"),
     "PlanetMerge": ("Planètes qui fusionnent", "Fusions"),
     "SlimeMerge": ("Slimes qui fusionnent", "Fusions"),
-    "EscapeRings": ("Balle qui sort des anneaux", "Balles et évasions"),
-    "EscapeBox": ("Boîte qui libère des billes", "Balles et évasions"),
-    "RingCountdown": ("Anneaux arc-en-ciel à briser", "Balles et évasions"),
-    "ShapeEscape": ("Formes à quitter (solo / duel)", "Balles et évasions"),
-    "SplitBalls": ("Balle qui se divise", "Balles et évasions"),
-    "ClockSweep": ("Aiguilles d'horloge et billes", "Balles et évasions"),
-    "GearArcs": ("Engrenage et arcs", "Balles et évasions"),
-    "Katana": ("Katana qui coupe les balles", "Balles et évasions"),
-    "GrowingBall": ("Balle qui grandit", "Balles et évasions"),
-    "Multiply": ("Balles qui se multiplient", "Balles et évasions"),
-    "InfiniteCube": ("Cube infini (boucle)", "3D et illusions"),
-    "InfiniteSpiral": ("Spirale hypnotique (boucle)", "3D et illusions"),
-    "PinArt": ("Plaque 3D qui se déforme (boucle)", "3D et illusions"),
-    "ParticleMorph": ("Particules 3D qui se transforment", "3D et illusions"),
-    "SongBounce": ("Bille qui rebondit sur chaque note", "Musique"),
-    "SongRing": ("Musique hachée qui finit en entier", "Musique"),
-    "MarbleMelody": ("Bille musicale (top mélodies)", "Musique"),
-    "PsyTrance": ("Psytrance hypnotique", "Musique"),
-    "Polyrhythm": ("Polyrythmie", "Musique"),
-    "Sorting": ("Le son d'un tri", "Autres"),
-    "PendulumWave": ("Vague de pendules", "Autres"),
-    "Galton": ("Planche de Galton", "Autres"),
+    "EscapeRings": ("Balle qui sort des anneaux", "Évasions"),
+    "EscapeBox": ("Boîte qui libère des billes", "Évasions"),
+    "RingCountdown": ("Anneaux arc-en-ciel à briser", "Évasions"),
+    "ShapeEscape": ("Formes à quitter (solo / duel)", "Évasions"),
+    "SplitBalls": ("Balle qui se divise", "Balles qui se divisent"),
+    "Multiply": ("Balles qui se multiplient", "Balles qui se divisent"),
+    "GrowingBall": ("Balle qui grandit", "Balles qui se divisent"),
+    "Katana": ("Katana qui coupe les balles", "Balles qui se divisent"),
+    "ClockSweep": ("Aiguilles d'horloge et billes", "Physique"),
+    "GearArcs": ("Engrenage et arcs", "Physique"),
+    "Galton": ("Planche de Galton", "Physique"),
+    "PendulumWave": ("Vague de pendules", "Physique"),
+    "Polyrhythm": ("Polyrythmie", "Physique"),
+    "Sorting": ("Le son d'un tri", "Physique"),
 }
-GROUPS = ["Patates", "Fusions", "Balles et évasions", "3D et illusions", "Musique", "Autres"]
 
 
 # ------------------------------------------------------------------ tâche en arrière-plan
@@ -142,13 +154,14 @@ def state():
     s = settings.load()
     nxt = settings.next_run(datetime.datetime.now(), s)
     hist = generate._history()
-    scenes = [{"name": c.__name__, "label": LABELS.get(c.__name__, (c.__name__, "Autres"))[0],
-               "group": LABELS.get(c.__name__, (c.__name__, "Autres"))[1], "lengths": list(c.lengths)}
+    scenes = [{"name": c.__name__, "label": LABELS.get(c.__name__, (c.__name__, "Physique"))[0],
+               "group": LABELS.get(c.__name__, (c.__name__, "Physique"))[1], "lengths": list(c.lengths)}
               for c in SCENES]
     return {
         "settings": s,
         "env_types": [t for t in os.environ.get("SCENES", "").split(",") if t.strip()],
         "scenes": scenes, "groups": GROUPS,
+        "themes": [{"name": n, "icon": i, "desc": d} for n, i, d in THEMES],
         "next_run": nxt.strftime("%Y-%m-%d %H:%M") if nxt else None,
         "now": datetime.datetime.now().strftime("%H:%M"),
         "history": [_entry_view(e) for e in reversed(hist[-40:])],
