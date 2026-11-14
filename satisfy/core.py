@@ -271,7 +271,7 @@ def render_scene(scene, out_path):
         raise RuntimeError("échec de l'encodage vidéo")
 
     duration = frame / FPS
-    scene.audio.render(duration, wav_tmp, bed=pad(duration, scene.bed_freqs, loop=scene.loop), loop=scene.loop)
+    scene.audio.render(duration, wav_tmp, bed=pad(duration, scene.bed_freqs, loop=scene.loop) if scene.bed_freqs else None, loop=scene.loop)
     subprocess.run(
         [FFMPEG, "-y", "-loglevel", "error", "-i", video_tmp, "-i", wav_tmp,
          "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out_path],

@@ -18,6 +18,8 @@ synthétisés donc sans droits d'auteur) et l'envoie sur TikTok à l'heure chois
 | `GearArcs` | Un engrenage et deux arcs en C dédoublent la balle à chaque coup : « 1 balle → 250 ? » |
 | `PinArt` | **Boucle infinie** : une plaque 3D en pixels change de forme sans fin |
 | `PotatoMerge` | Des patates fusionnent en patates plus grosses (8 personnages tirés parmi plus de 50), une voix de plus en plus grave annonce chaque nouvelle |
+| `SongBounce` | Une bille creuse son chemin et rebondit pile sur chaque note d'une musique connue (domaine public, arrangée synthé + basse + batterie) ; le nom se dévoile en cours de route |
+| `SongRing` | « Devine la musique » : la musique n'avance que quand une bille touche l'anneau, le jeton x2 multiplie les billes et le morceau finit par jouer en entier |
 | `MarbleMelody` | Une bille rebondit de tube en tube et joue des mélodies connues (libres de droits) : « Top 6 des mélodies » |
 | `PotatoRace` | Course de 3-4 patates dans des anneaux qui tournent : « quelle patate sort en premier ? » |
 | `PotatoSplit` | Une patate géante se divise à chaque rebond, chaque génération révèle de nouveaux personnages |

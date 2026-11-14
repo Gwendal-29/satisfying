@@ -791,9 +791,10 @@ from .psy import PsyTrance  # noqa: E402
 from .more import ParticleMorph, PlanetMerge, ShapeEscape, SlimeMerge, SplitBalls  # noqa: E402
 from .potatoes import PotatoDuel, PotatoEscape, PotatoRace, PotatoSplit  # noqa: E402
 from .illusions import InfiniteCube, InfiniteSpiral  # noqa: E402
+from .music import SongBounce, SongRing  # noqa: E402
 
 SCENES = [GrowingBall, EscapeRings, Polyrhythm, Sorting, PendulumWave, Galton, Multiply,
           InfiniteCube, InfiniteSpiral, EscapeBox, RingCountdown, Katana, ClockSweep,
           GearArcs, PinArt, PotatoMerge, MarbleMelody, PsyTrance,
           PlanetMerge, SlimeMerge, SplitBalls, ShapeEscape, ParticleMorph,
-          PotatoRace, PotatoSplit, PotatoEscape, PotatoDuel]
+          PotatoRace, PotatoSplit, PotatoEscape, PotatoDuel, SongBounce, SongRing]

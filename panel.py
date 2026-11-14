@@ -54,6 +54,8 @@ LABELS = {
     "InfiniteSpiral": ("Spirale hypnotique (boucle)", "3D et illusions"),
     "PinArt": ("Plaque 3D qui se déforme (boucle)", "3D et illusions"),
     "ParticleMorph": ("Particules 3D qui se transforment", "3D et illusions"),
+    "SongBounce": ("Bille qui rebondit sur chaque note", "Musique"),
+    "SongRing": ("Musique hachée qui finit en entier", "Musique"),
     "MarbleMelody": ("Bille musicale (top mélodies)", "Musique"),
     "PsyTrance": ("Psytrance hypnotique", "Musique"),
     "Polyrhythm": ("Polyrythmie", "Musique"),
